@@ -42,9 +42,14 @@ def tensor_hashes(items):
         flat = value.reshape(-1)
         digest = hashlib.sha256()
         for start in range(0, flat.size, 262144):
-            host = np.ascontiguousarray(np.asarray(flat[start:start + 262144]))
+            # A slice aliases the original allocation: NumPy would migrate the
+            # whole backing tensor and retain a host mirror. Materialize a small
+            # independent CUDA result before asking NumPy for its bytes.
+            chunk = mx.multiply(flat[start:start + 262144], mx.array(1, dtype=value.dtype))
+            mx.eval(chunk)
+            host = np.ascontiguousarray(np.asarray(chunk))
             digest.update(memoryview(host).cast('B'))
-            del host
+            del host, chunk
         result[name] = digest.hexdigest()
     return result
 
