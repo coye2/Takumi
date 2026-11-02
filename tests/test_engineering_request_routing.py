@@ -130,7 +130,9 @@ class EngineRequestIntegrationTests(unittest.TestCase):
                     self.assertEqual(done['text'], 'Examined current source; no tests were executed.')
                     self.assertEqual(done['status_origin'], 'model')
                     self.assertIn(task, RequestDispatchAgent.calls[-1]['prompt'])
-                    self.assertEqual(RequestDispatchAgent.calls[-1]['project'], str(repo))
+                    # Windows CI can supply an 8.3 TEMP alias while the runtime
+                    # resolves the full path. Both must identify the same folder.
+                    self.assertTrue(Path(RequestDispatchAgent.calls[-1]['project']).samefile(repo))
                     self.assertIn('Do not decline', RequestDispatchAgent.calls[-1]['prompt'])
         self.assertEqual(len(RequestDispatchAgent.calls), len(TASKS))
 
