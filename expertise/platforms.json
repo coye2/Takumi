@@ -1,0 +1,580 @@
+[
+  {
+    "id": "nes",
+    "title": "NES / Famicom",
+    "aliases": [
+      "nes",
+      "famicom",
+      "6502",
+      "2a03",
+      "2c02",
+      "mapper"
+    ],
+    "architecture": "Ricoh 2A03/6502-like CPU; PPU scanline and dot timing; mapper/MMC bus behavior; APU channels.",
+    "diagnostic_probes": "Verify PPU-visible fetch timing, mapper IRQ edges, open-bus and DMA cycle parity.",
+    "source_ids": [
+      "ares",
+      "mame"
+    ],
+    "console_aliases": [
+      "nes",
+      "famicom"
+    ]
+  },
+  {
+    "id": "snes",
+    "title": "SNES / Super Famicom",
+    "aliases": [
+      "snes",
+      "super nintendo",
+      "sfc",
+      "65816",
+      "sa-1",
+      "s-dsp",
+      "super fx"
+    ],
+    "architecture": "65C816 main CPU, PPU dual-screen/window/mode7 behavior, SPC700/S-DSP audio and enhancement coprocessors.",
+    "diagnostic_probes": "Trace DMA/HDMA, bus access arbitration, IRQ/NMI cycle edges, DSP sample timing.",
+    "source_ids": [
+      "ares",
+      "mame"
+    ],
+    "console_aliases": [
+      "snes",
+      "super nintendo",
+      "sfc"
+    ]
+  },
+  {
+    "id": "gb",
+    "title": "Game Boy / Game Boy Color",
+    "aliases": [
+      "game boy",
+      "gbc",
+      "dmg",
+      "sm83",
+      "cgb",
+      "pocket"
+    ],
+    "architecture": "SM83 CPU, PPU modes, OAM/VRAM access rules, MBC cartridges, timer edge cases.",
+    "diagnostic_probes": "Differential-test HALT/STOP, timer glitches, sprite priority, mode transitions.",
+    "source_ids": [
+      "mgba",
+      "ares",
+      "pret"
+    ],
+    "console_aliases": [
+      "game boy",
+      "gbc",
+      "dmg",
+      "sm83"
+    ]
+  },
+  {
+    "id": "gba",
+    "title": "Game Boy Advance",
+    "aliases": [
+      "gba",
+      "game boy advance",
+      "arm7tdmi",
+      "bios swi"
+    ],
+    "architecture": "ARM7TDMI ARM/Thumb, BIOS SWI, affine/tiled graphics, timers, DMA channels, interrupts.",
+    "diagnostic_probes": "Validate pipeline-prefetch, WAITCNT, DMA scheduling, OAM/VRAM palette and affine math.",
+    "source_ids": [
+      "mgba",
+      "ares"
+    ],
+    "console_aliases": [
+      "gba",
+      "game boy advance"
+    ]
+  },
+  {
+    "id": "n64",
+    "title": "Nintendo 64",
+    "aliases": [
+      "nintendo 64",
+      "n64",
+      "mips r4300",
+      "rsp",
+      "rdp",
+      "ultra64",
+      "libultra"
+    ],
+    "architecture": "MIPS R4300i CPU, RSP vector coprocessor and microcode, RDP display lists, VI/AI/PI/SI devices.",
+    "diagnostic_probes": "Capture task microcode variant, RSP/RDP command trace, cache/RDRAM coherence and VI output.",
+    "source_ids": [
+      "ares",
+      "mame",
+      "pret"
+    ],
+    "console_aliases": [
+      "n64",
+      "nintendo 64"
+    ]
+  },
+  {
+    "id": "gcwii",
+    "title": "GameCube / Wii",
+    "aliases": [
+      "gamecube",
+      "wii",
+      "gekko",
+      "broadway",
+      "flipper",
+      "hollywood",
+      "ios ipc"
+    ],
+    "architecture": "PowerPC Gekko/Broadway, GX TEV rasterization, DSP/ARAM, IOS IPC and memory-mapped peripherals.",
+    "diagnostic_probes": "Compare PowerPC paired-single/JIT execution, EFB copy, TEV stages, IOS response timing.",
+    "source_ids": [
+      "dolphin"
+    ],
+    "console_aliases": [
+      "gamecube",
+      "wii"
+    ]
+  },
+  {
+    "id": "wiiu",
+    "title": "Wii U",
+    "aliases": [
+      "wii u",
+      "wiiu",
+      "cafe os",
+      "gx2",
+      "latte",
+      "espresso"
+    ],
+    "architecture": "PowerPC Espresso multicore, Cafe OS, GX2 graphics, Latte tiling, MEM1/MEM2 virtual memory.",
+    "diagnostic_probes": "Trace GX2 resource tiling, command queues, shader translation, Cafe syscall ownership.",
+    "source_ids": [
+      "cemu",
+      "dolphin"
+    ],
+    "console_aliases": [
+      "wii u",
+      "wiiu",
+      "cafe os"
+    ]
+  },
+  {
+    "id": "switch1",
+    "title": "Nintendo Switch",
+    "aliases": [
+      "switch 1",
+      "switch1",
+      "nintendo switch",
+      "horizon",
+      "maxwell",
+      "nvn",
+      "tegra x1",
+      "arm64 switch",
+      "nsp",
+      "nca"
+    ],
+    "architecture": "ARMv8-A guest code, Horizon-style HLE kernel and services, Maxwell GPU, NVN shader/texture formats.",
+    "diagnostic_probes": "Inspect guest PC and service IPC first; then texture mappings, GPU barriers, fences, shader translation and presentation.",
+    "source_ids": [
+      "ryujinx-docs",
+      "vulkan",
+      "renderdoc"
+    ],
+    "console_aliases": [
+      "nintendo switch",
+      "switch 1",
+      "switch1",
+      "horizon",
+      "tegra x1"
+    ]
+  },
+  {
+    "id": "switch2",
+    "title": "Switch 2 research",
+    "aliases": [
+      "switch 2",
+      "switch2",
+      "nintendo switch 2",
+      "nxi",
+      "pokopia",
+      "debar",
+      "depbar",
+      "hadd2"
+    ],
+    "architecture": "Treat publicly available architecture descriptions as incomplete and version-specific. Preserve generation-specific runtime behavior. Do not infer proprietary GPU commands from names alone.",
+    "diagnostic_probes": "For black output distinguish guest draws, command submission, image writes, image/layout transitions, waits/fences, swapchain and genuinely recognizable pixels. Match game Build ID and native core revision.",
+    "source_ids": [
+      "vulkan",
+      "spirv",
+      "renderdoc",
+      "ryujinx-docs"
+    ],
+    "console_aliases": [
+      "switch 2",
+      "switch2",
+      "nintendo switch 2",
+      "pokopia",
+      "hadd2",
+      "depbar"
+    ]
+  },
+  {
+    "id": "nds",
+    "title": "Nintendo DS / DSi",
+    "aliases": [
+      "nintendo ds",
+      "dsi",
+      "melon ds",
+      "arm9",
+      "arm7",
+      "gx fifo"
+    ],
+    "architecture": "ARM9 + ARM7 processors, IPC FIFO, dual 2D engines, geometry/3D rasterization, DMA and cartridge IO.",
+    "diagnostic_probes": "Check inter-CPU timing, scanline transitions, geometry FIFO, depth/alpha precision, shared memory sync.",
+    "source_ids": [
+      "melonds",
+      "ares"
+    ],
+    "console_aliases": [
+      "nintendo ds",
+      "dsi",
+      "melon ds"
+    ]
+  },
+  {
+    "id": "3ds",
+    "title": "Nintendo 3DS",
+    "aliases": [
+      "3ds",
+      "nintendo 3ds",
+      "ctr",
+      "pica200",
+      "azahar",
+      "citra"
+    ],
+    "architecture": "ARM11 and ARM9, 3DS kernel/services, PICA200 GPU shader units, CTR container formats.",
+    "diagnostic_probes": "Inspect service IPC descriptors, GPU command buffer and vertex shader features, display ownership.",
+    "source_ids": [
+      "azahar"
+    ],
+    "console_aliases": [
+      "3ds",
+      "nintendo 3ds",
+      "citra",
+      "azahar"
+    ]
+  },
+  {
+    "id": "ps1",
+    "title": "PlayStation / PS1",
+    "aliases": [
+      "ps1",
+      "psx",
+      "playstation 1",
+      "r3000a",
+      "gte",
+      "spu"
+    ],
+    "architecture": "MIPS R3000A, GTE fixed-point transform, primitive GPU renderer, SPU ADPCM and CD-ROM timing.",
+    "diagnostic_probes": "Differential-test GTE saturation flags, GPU packet decoding, DMA arbitration, CD IRQ timing.",
+    "source_ids": [
+      "duckstation",
+      "ares"
+    ],
+    "console_aliases": [
+      "ps1",
+      "psx",
+      "playstation 1"
+    ]
+  },
+  {
+    "id": "ps2",
+    "title": "PlayStation 2",
+    "aliases": [
+      "ps2",
+      "playstation 2",
+      "emotion engine",
+      "vu0",
+      "vu1",
+      "gs gif",
+      "iop",
+      "ee rec"
+    ],
+    "architecture": "Emotion Engine MIPS, VU0/VU1 vector microcode, GIF/VIF DMA, GS pixel semantics and IOP interaction.",
+    "diagnostic_probes": "Capture VIF/VU program state, GS register writes, texture cache invalidation and EE/IOP timing.",
+    "source_ids": [
+      "pcsx2"
+    ],
+    "console_aliases": [
+      "ps2",
+      "playstation 2",
+      "emotion engine"
+    ]
+  },
+  {
+    "id": "ps3",
+    "title": "PlayStation 3",
+    "aliases": [
+      "ps3",
+      "playstation 3",
+      "cell spu",
+      "rpcs3",
+      "ppu",
+      "rsx",
+      "lv2"
+    ],
+    "architecture": "Cell PPU+SPU, SPU local-store DMA, LV2 HLE syscalls, RSX FIFO/tiling and synchronization.",
+    "diagnostic_probes": "Separate PPU/SPU faults, RSX resource state, SPU DMA stalls, syscall args and host device loss.",
+    "source_ids": [
+      "rpcs3",
+      "renderdoc"
+    ],
+    "console_aliases": [
+      "ps3",
+      "playstation 3",
+      "rpcs3"
+    ]
+  },
+  {
+    "id": "ps4",
+    "title": "PlayStation 4",
+    "aliases": [
+      "ps4",
+      "playstation 4",
+      "gnm",
+      "gnmx",
+      "gcn",
+      "shadps4"
+    ],
+    "architecture": "x86-64 guest, AMD GCN command processors/shaders, GNM APIs, memory maps, library/HLE compatibility.",
+    "diagnostic_probes": "Capture guest syscalls, GPU PM4 stream, descriptor/texture metadata, synchronization and compiler lowering.",
+    "source_ids": [
+      "shadps4",
+      "vulkan"
+    ],
+    "console_aliases": [
+      "ps4",
+      "playstation 4",
+      "shadps4"
+    ]
+  },
+  {
+    "id": "psp",
+    "title": "PSP",
+    "aliases": [
+      "psp",
+      "playstation portable",
+      "allegrex",
+      "scege",
+      "scekernel"
+    ],
+    "architecture": "Allegrex MIPS CPU, VFPU, GE command lists, HLE modules, media engine and SPU-like audio pipeline.",
+    "diagnostic_probes": "Check VFPU math flags, GE command ordering, HLE module ABI, JIT block invalidation.",
+    "source_ids": [
+      "ppsspp"
+    ],
+    "console_aliases": [
+      "psp",
+      "playstation portable",
+      "ppsspp"
+    ]
+  },
+  {
+    "id": "vita",
+    "title": "PS Vita",
+    "aliases": [
+      "ps vita",
+      "vita",
+      "scegxm",
+      "vita3k",
+      "arm cortex a9"
+    ],
+    "architecture": "ARM Cortex-A9, user/kernel services, SceGxm graphics interfaces and shader translation.",
+    "diagnostic_probes": "Check import table/NID binding, GXM resource formats, shader uniform layouts and synchronization.",
+    "source_ids": [
+      "vulkan",
+      "ghidra"
+    ],
+    "console_aliases": [
+      "ps vita",
+      "vita",
+      "vita3k"
+    ]
+  },
+  {
+    "id": "xbox",
+    "title": "Original Xbox",
+    "aliases": [
+      "original xbox",
+      "xbox classic",
+      "nv2a",
+      "xbox kernel",
+      "xemu"
+    ],
+    "architecture": "x86 Pentium III-like CPU, Xbox kernel API, NV2A GPU, MCPX audio/DSP and memory mapped peripherals.",
+    "diagnostic_probes": "Trace GPU pushbuffer commands, vertex formats, kernel object lifetimes and audio DSP behavior.",
+    "source_ids": [
+      "xemu"
+    ],
+    "console_aliases": [
+      "original xbox",
+      "xbox classic",
+      "xemu"
+    ]
+  },
+  {
+    "id": "xbox360",
+    "title": "Xbox 360",
+    "aliases": [
+      "xbox 360",
+      "xenon",
+      "xenos",
+      "xenia",
+      "xbox360"
+    ],
+    "architecture": "PowerPC Xenon, Xenos GPU unified shaders, eDRAM, tiled textures and Xbox 360 kernel APIs.",
+    "diagnostic_probes": "Validate PPC endian behavior, eDRAM resolves, texture tiling, GPU packet parsing and guest allocations.",
+    "source_ids": [
+      "xenia",
+      "vulkan"
+    ],
+    "console_aliases": [
+      "xbox 360",
+      "xbox360",
+      "xenia"
+    ]
+  },
+  {
+    "id": "genesis",
+    "title": "Mega Drive / Genesis",
+    "aliases": [
+      "sega genesis",
+      "megadrive",
+      "mega drive",
+      "motorola 68000",
+      "ym2612",
+      "vdp"
+    ],
+    "architecture": "Motorola 68000 + Z80 sound, VDP planes/sprites/DMA, YM2612 FM and PSG.",
+    "diagnostic_probes": "Compare VDP FIFO stalls, H/V counter/IRQ edges and YM2612 timing.",
+    "source_ids": [
+      "ares",
+      "mame"
+    ],
+    "console_aliases": [
+      "sega genesis",
+      "megadrive",
+      "mega drive"
+    ]
+  },
+  {
+    "id": "saturn",
+    "title": "Sega Saturn",
+    "aliases": [
+      "sega saturn",
+      "saturn",
+      "sh-2",
+      "vdp1",
+      "vdp2",
+      "scu dsp"
+    ],
+    "architecture": "Dual SH-2 CPUs, SCU DMA/DSP, VDP1 distorted quads and VDP2 backgrounds; precise bus arbitration.",
+    "diagnostic_probes": "Capture inter-CPU ordering, SCU DMA timing, VDP1 command list and VDP2 blending.",
+    "source_ids": [
+      "ares",
+      "mame"
+    ],
+    "console_aliases": [
+      "sega saturn",
+      "saturn"
+    ]
+  },
+  {
+    "id": "dreamcast",
+    "title": "Dreamcast / NAOMI",
+    "aliases": [
+      "dreamcast",
+      "naomi",
+      "sh-4",
+      "power vr",
+      "powervr",
+      "pvr2",
+      "aica"
+    ],
+    "architecture": "Hitachi SH-4, PowerVR2 tile-based deferred rendering, AICA ARM7 audio and Maple peripherals.",
+    "diagnostic_probes": "Trace tile bins, translucent pass sorting, twiddled textures and SH4 DMA/cache coherency.",
+    "source_ids": [
+      "ares",
+      "mame"
+    ],
+    "console_aliases": [
+      "dreamcast",
+      "naomi"
+    ]
+  },
+  {
+    "id": "arcade",
+    "title": "Arcade systems",
+    "aliases": [
+      "arcade",
+      "mame",
+      "neogeo",
+      "neo geo",
+      "cps2",
+      "namco system",
+      "sega model"
+    ],
+    "architecture": "Hardware differs per board; define machine/device/bus map, clocks, video/audio and cartridge security for the specific board.",
+    "diagnostic_probes": "Check actual board revision, ROM region layout and device configuration; use per-device tests rather than assuming generic arcade hardware.",
+    "source_ids": [
+      "mame",
+      "ares"
+    ],
+    "console_aliases": [
+      "arcade",
+      "mame",
+      "neogeo",
+      "neo geo"
+    ]
+  },
+  {
+    "id": "dos",
+    "title": "DOS-era PC",
+    "aliases": [
+      "ms dos",
+      "dosbox",
+      "vga",
+      "sound blaster",
+      "adlib",
+      "protected mode"
+    ],
+    "architecture": "x86 real/protected modes, BIOS/DOS services, VGA planar memory, PIT/PIC, DMA, OPL audio and timing.",
+    "diagnostic_probes": "Compare interrupt behavior, timer divisors, VRAM latches, DMA channels and sample timing.",
+    "source_ids": [
+      "dosbox"
+    ],
+    "console_aliases": [
+      "ms dos",
+      "dosbox"
+    ]
+  },
+  {
+    "id": "other",
+    "title": "Other or emerging platforms",
+    "aliases": [
+      "console emulator",
+      "new console",
+      "homebrew emulator",
+      "console emulation"
+    ],
+    "architecture": "Begin with a documented CPU ISA, memory map, timing graph, executable format, OS API and device interfaces. Unknown hardware behavior must remain hypotheses.",
+    "diagnostic_probes": "Build a homebrew instruction/service smoke test and a small known-answer device test before commercial titles.",
+    "source_ids": [
+      "ares",
+      "mame",
+      "llvm"
+    ],
+    "console_aliases": []
+  }
+]

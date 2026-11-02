@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a reproducible problem in Takumi.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe expected and actual behavior. Remove secrets and private project data.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Takumi version, Windows version, GPU/RAM, model and relevant tool versions.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots
+      description: Include only the relevant redacted excerpt. Do not upload chat databases, tokens or private files.

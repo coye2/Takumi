@@ -1,0 +1,380 @@
+[
+  {
+    "id": "cpu",
+    "title": "CPU, interpreters & dynamic recompilers",
+    "aliases": [
+      "cpu",
+      "jit",
+      "dynarec",
+      "recompiler",
+      "opcode",
+      "instruction",
+      "arm64",
+      "mips",
+      "ppc",
+      "x86",
+      "interpreter",
+      "translation"
+    ],
+    "method": "Map exact ISA mode, registers/flags and address translation. Reproduce one guest instruction/block with PC, bytes, operands, registers and memory side effects. Compare interpreter and JIT against a known-answer corpus. Guard self-modifying code and invalidation; verify barriers and exceptions before optimizing.",
+    "verification": "Differential single-step tests; randomized arithmetic/flag edge cases; faulting memory and interrupt tests.",
+    "source_ids": [
+      "llvm",
+      "ppsspp",
+      "dolphin"
+    ]
+  },
+  {
+    "id": "gpu",
+    "title": "GPU graphics & presentation",
+    "aliases": [
+      "gpu",
+      "render",
+      "frame",
+      "black screen",
+      "graphics",
+      "framebuffer",
+      "swapchain",
+      "raster",
+      "draw call",
+      "command buffer",
+      "presentation"
+    ],
+    "method": "Follow the frame causally: guest command production → packet decode → shader/texture/resource translation → execution → render target → ownership/layout transitions → present. Separate a submitted frame from one containing recognizable pixels; capture real attachments and timestamp each stage.",
+    "verification": "Known-geometry homebrew golden frame, GPU capture, pixel checksum and screenshot comparison.",
+    "source_ids": [
+      "renderdoc",
+      "vulkan",
+      "d3d12"
+    ]
+  },
+  {
+    "id": "barriers",
+    "title": "Synchronization & GPU memory",
+    "aliases": [
+      "synchronization",
+      "sync",
+      "fence",
+      "semaphore",
+      "barrier",
+      "depbar",
+      "hadd2",
+      "pipeline stall",
+      "queue wait",
+      "ownership",
+      "timeline"
+    ],
+    "method": "Record producer/consumer queues, stage/access scopes, resource/subresource and timeline values. Establish happens-before edges and lifetime/aliasing invariants; test correctness under delayed submissions. Never remove waits or force completion to hide black output.",
+    "verification": "Targeted barrier graph replay, queue-order stress test, lost-wakeup and use-after-free instrumentation.",
+    "source_ids": [
+      "vulkan",
+      "d3d12",
+      "renderdoc"
+    ]
+  },
+  {
+    "id": "shaders",
+    "title": "Shader ISA, translation & compilation",
+    "aliases": [
+      "shader",
+      "spirv",
+      "glsl",
+      "hlsl",
+      "compute",
+      "fragment",
+      "vertex",
+      "shader cache",
+      "pipeline compilation",
+      "descriptor",
+      "warp"
+    ],
+    "method": "Validate guest ISA decoding, SSA/value widths, signedness, precision, derivatives, texture/sampler formats, resource indexing, wave/subgroup semantics. Record shader hash, cache key, compiler diagnostics and variant flags. Preserve first-use correctness.",
+    "verification": "Compile/validate translated SPIR-V and execute small differential shader cases; replay first-action event twice with cold/hot caches.",
+    "source_ids": [
+      "spirv",
+      "vulkan",
+      "renderdoc",
+      "shadps4"
+    ]
+  },
+  {
+    "id": "os",
+    "title": "Kernel, services & IPC",
+    "aliases": [
+      "kernel",
+      "horizon",
+      "service",
+      "ipc",
+      "syscall",
+      "handle",
+      "thread",
+      "semaphore",
+      "event",
+      "scheduler",
+      "timing"
+    ],
+    "method": "Decode ABI structs/command IDs, pointer buffers, handle rights and lifetimes. Trace caller, service, return code and side effects. Model events/wait queues with explicit state transitions. Never return unconditional success from unimplemented services.",
+    "verification": "Command contract tests including invalid handle, buffer length, cancel, ordering and shutdown paths.",
+    "source_ids": [
+      "ryujinx-docs",
+      "rpcs3",
+      "pcsx2"
+    ]
+  },
+  {
+    "id": "dma",
+    "title": "Caches, DMA & coherency",
+    "aliases": [
+      "dma",
+      "coherence",
+      "cache",
+      "invalidate",
+      "tile",
+      "texture overlap",
+      "alias",
+      "virtual memory",
+      "page table",
+      "mmu",
+      "memory"
+    ],
+    "method": "Track guest physical and virtual mappings, layout/tiling, cache ownership, invalidation triggers and CPU↔GPU resource transitions. Verify byte and stride boundaries, endianness and alignment.",
+    "verification": "Randomized address-map tests, DMA boundary/wrap tests, CPU/GPU alternating writers, stale-read reproduction.",
+    "source_ids": [
+      "dolphin",
+      "rpcs3",
+      "xenia"
+    ]
+  },
+  {
+    "id": "audio",
+    "title": "Audio and DSP",
+    "aliases": [
+      "audio",
+      "dsp",
+      "apu",
+      "spu",
+      "adpcm",
+      "resampler",
+      "sound",
+      "crackle",
+      "latency",
+      "aica"
+    ],
+    "method": "Separate guest audio clocks, DMA ring ownership, DSP math, hardware registers, resampling and host output. Measure sample counts and discontinuities rather than masking glitches with larger buffers.",
+    "verification": "Impulse/sine reference samples, underrun counters, long-running drift tests, frame/sound sync.",
+    "source_ids": [
+      "ppsspp",
+      "dolphin",
+      "ares"
+    ]
+  },
+  {
+    "id": "decomp",
+    "title": "Decompilation & reconstruction",
+    "aliases": [
+      "decomp",
+      "decompile",
+      "disassemble",
+      "matching",
+      "asm",
+      "rom reverse",
+      "function matching",
+      "decompilation",
+      "ghidra",
+      "binary analysis"
+    ],
+    "method": "Confirm rights and exact binary hash/toolchain/region. Extract symbol and section maps; identify ABI, calling convention, endianness, function boundaries, inlining and compiler version. Build a reproducible match loop: compiler flags → generated assembly → object diff → hypothesis. Mark guesses as guesses.",
+    "verification": "Byte-accurate object/function matching and compiler-diff reports; semantic tests when exact matching is unattainable.",
+    "source_ids": [
+      "ghidra",
+      "pret",
+      "decompme",
+      "capstone"
+    ]
+  },
+  {
+    "id": "formats",
+    "title": "ROM, disc, binaries & loaders",
+    "aliases": [
+      "rom",
+      "iso",
+      "nsp",
+      "nca",
+      "elf",
+      "dol",
+      "rel",
+      "nso",
+      "npdm",
+      "container format",
+      "binary format",
+      "file parser",
+      "endianness",
+      "loader"
+    ],
+    "method": "Identify magic, version, offsets, alignment, pointers and compression first. Parse untrusted inputs with bounded sizes and overflow checks. Distinguish extraction, decoding, linkage, address relocation and execution startup.",
+    "verification": "Malformed input fuzz corpus, known-good fixture hashes, endianness/bounds tests, loader ABI smoke tests.",
+    "source_ids": [
+      "ghidra",
+      "mame",
+      "ryujinx-docs"
+    ]
+  },
+  {
+    "id": "reverse",
+    "title": "Reverse engineering engine behavior",
+    "aliases": [
+      "reverse engineer",
+      "reverse engineering",
+      "game engine",
+      "dll",
+      "symbol",
+      "signature",
+      "rtti",
+      "vtable",
+      "call graph",
+      "binary",
+      "assets"
+    ],
+    "method": "Build evidence from symbols, strings, xrefs, traces and object lifetimes. Correlate static disassembly with behavior captured from software you are authorized to analyze. Keep per-build offsets and signatures separate; never infer identity from one matching byte pattern.",
+    "verification": "Known-input/known-output tests, cross-version function-map diffs, symbol provenance and reproducible notes.",
+    "source_ids": [
+      "ghidra",
+      "capstone"
+    ]
+  },
+  {
+    "id": "perf",
+    "title": "Stutter, profiling & performance",
+    "aliases": [
+      "fps",
+      "stutter",
+      "slow",
+      "perf",
+      "profiling",
+      "frame pacing",
+      "hitch",
+      "latency",
+      "bottleneck",
+      "compile time"
+    ],
+    "method": "Measure end-to-end frame intervals, thread states, driver compilation, lock contention, file IO and guest-exit events. Use cold/warm A/B, timestamped markers and representative scenes. Preserve real game speed while optimizing.",
+    "verification": "Frame-time p50/p95/p99, 100ms hitch count, lock waits, shader cold-cache replay, baseline-versus-patch comparison.",
+    "source_ids": [
+      "renderdoc",
+      "dolphin",
+      "ppsspp"
+    ]
+  },
+  {
+    "id": "harness",
+    "title": "Testing & evidence discipline",
+    "aliases": [
+      "test harness",
+      "regression",
+      "unit test",
+      "automation",
+      "cli",
+      "qa",
+      "compatibility",
+      "proof",
+      "integration test"
+    ],
+    "method": "Pin repository branch/commit, binary hash, game/build IDs, firmware and driver versions. Separate build PASS from guest bootstrap, recognizable frame, interactive menu and sustained gameplay. Preserve local private logs and supply redacted summaries.",
+    "verification": "Repro script with deterministic exit codes, log capture, screenshots/hash, A/B against baseline and negative tests.",
+    "source_ids": [
+      "dolphin",
+      "rpcs3",
+      "mame"
+    ]
+  },
+  {
+    "id": "legal",
+    "title": "Licenses, provenance & upstream integration",
+    "aliases": [
+      "license",
+      "licensing",
+      "gpl",
+      "mit",
+      "source reuse",
+      "port upstream",
+      "redistribution",
+      "copy source"
+    ],
+    "method": "Study the actual LICENSE, per-file headers, submodule notices and upstream AI contribution policies. Distinguish reading ideas from copying implementation. When code is incorporated, retain notices and comply with corresponding-source obligations. Do not strip authorship.",
+    "verification": "Third-party manifest, dependency source archives, per-file attribution and build-reproducibility checks.",
+    "source_ids": [
+      "rpcs3",
+      "ppsspp",
+      "ghidra"
+    ]
+  },
+  {
+    "id": "serial-arithmetic",
+    "title": "Finite-width completion counters and serial ordering",
+    "aliases": [
+      "completion counter",
+      "serial number",
+      "counter wrap",
+      "wrap counter",
+      "modular difference",
+      "wrapped counter"
+    ],
+    "method": "First establish counter width, direction, wrap behavior and maximum valid separation. For an N-bit increasing serial space, compute d=(completed-target) modulo 2^N without signed overflow. Equality is complete; 0<d<2^(N-1) is after; d exactly half the range is ambiguous. This ordering requires a bounded-separation contract and must not replace plain monotonic comparison where wrapping is excluded. Keep the modulus at the counter width, not the host integer width.",
+    "verification": "Use an independent unbounded-integer timeline oracle across rollover. Check equality, just-before, just-after, zero, maximum and the excluded half-range. Record intermediate decimal and hexadecimal values before asserting a result. RFC 1982 supplies serial arithmetic, not a hardware fence or memory-visibility guarantee.",
+    "source_ids": [
+      "serial-rfc"
+    ]
+  },
+  {
+    "id": "layout-strides",
+    "title": "Byte layouts, row pitch and vertex fetch",
+    "aliases": [
+      "row pitch",
+      "vertex fetch",
+      "vertex stride",
+      "packed vertex",
+      "padded rows",
+      "texture upload"
+    ],
+    "method": "Write a table with one row per producer/consumer: base, element size, field offset, logical bytes per row and physical stride/pitch. Address record i as base+i*stride+field_offset. Keep CPU upload storage separate from GPU transfer interpretation. Padding changes the next row start, not the number of valid pixels. Use the target API footprint/alignment contract; do not impose D3D12 alignment on a fictional or different API.",
+    "verification": "Use distinct sentinel values in at least two nonzero-index rows/vertices and in padding. Verify the consumer output, not just the producer bytes. A first record at index zero cannot expose a wrong stride. Show expected addresses independently and prove that the old descriptor fails the same test.",
+    "source_ids": [
+      "d3d12-upload"
+    ]
+  },
+  {
+    "id": "bit-representation",
+    "title": "Bit patterns, endianness and floating-point reinterpretation",
+    "aliases": [
+      "bit pattern",
+      "bit patterns",
+      "float reinterpretation",
+      "signed zero",
+      "sign bit",
+      "endian conversion",
+      "binary layout"
+    ],
+    "method": "Separate numeric conversion from bit reinterpretation. Specify width, byte order and signedness before doing arithmetic. Compute byte assembly with explicit shifts or a bounded independent parser; round-trip the exact bytes. For binary32, distinguish the sign bit, exponent and fraction: zero exponent and zero fraction encode signed zero, all-one exponent with zero fraction infinity, and all-one exponent with nonzero fraction NaN. A sign bit alone is not infinity. Do not infer ABI word size from a register name.",
+    "verification": "Compare exact bytes for positive/negative zero, subnormal, normal, infinity and NaN inputs. Check integer masks against a separate integer oracle, not float multiplication. Python struct with an explicit endian prefix provides a portable binary32 packing oracle; do not claim the generated program executed unless it did.",
+    "source_ids": [
+      "python-struct"
+    ]
+  },
+  {
+    "id": "completion-visibility",
+    "title": "Separate submission, completion, visibility and lifetime",
+    "aliases": [
+      "cpu gpu",
+      "gpu completion",
+      "mapped bytes",
+      "device ownership",
+      "completion signal",
+      "memory visibility"
+    ],
+    "method": "Keep four facts separate: work accepted by a queue, the relevant consumer finished executing, required writes available/visible under the specific API, and storage lifetime. A completion fence can establish scoped device completion; submission alone cannot. Do not assume an unspecified cache-coherency or memory-dependency contract. Keep storage alive and unchanged until all its consumers finish; resolve visibility with the applicable scopes and memory properties.",
+    "verification": "Delay the actual consumer, use distinct input versions, and inspect its captured result before permitting reuse. Reading back unchanged CPU input does not prove the GPU read it. Check both the missing synchronization case and the corrected case under the same schedule; one lucky frame is insufficient.",
+    "source_ids": [
+      "vulkan-sync"
+    ]
+  }
+]

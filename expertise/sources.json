@@ -1,0 +1,276 @@
+[
+  {
+    "id": "dolphin",
+    "title": "Dolphin",
+    "url": "https://github.com/dolphin-emu/dolphin",
+    "focus": "GameCube and Wii: PowerPC JIT, video backends, IOS and DSP",
+    "license_note": "GPL-2.0-or-later",
+    "kind": "repository",
+    "source_id": "dolphin-emu/dolphin"
+  },
+  {
+    "id": "pcsx2",
+    "title": "PCSX2",
+    "url": "https://github.com/PCSX2/pcsx2",
+    "focus": "PlayStation 2: EE/VU recompilation, GS, timing and virtual memory",
+    "license_note": "GPL family; check files",
+    "kind": "repository",
+    "source_id": "PCSX2/pcsx2"
+  },
+  {
+    "id": "rpcs3",
+    "title": "RPCS3",
+    "url": "https://github.com/RPCS3/rpcs3",
+    "focus": "PlayStation 3: PPU/SPU emulation, Cell services, RSX",
+    "license_note": "GPL-2.0-only; check files",
+    "kind": "repository",
+    "source_id": "RPCS3/rpcs3"
+  },
+  {
+    "id": "ppsspp",
+    "title": "PPSSPP",
+    "url": "https://github.com/hrydgard/ppsspp",
+    "focus": "PSP: MIPS JIT, HLE services, GE, audio, portability",
+    "license_note": "GPL-2.0-or-later",
+    "kind": "repository",
+    "source_id": "hrydgard/ppsspp"
+  },
+  {
+    "id": "azahar",
+    "title": "Azahar",
+    "url": "https://github.com/azahar-emu/azahar",
+    "focus": "Nintendo 3DS: ARM CPU, kernel/services and PICA GPU",
+    "license_note": "GPL family; check files",
+    "kind": "repository",
+    "source_id": "azahar-emu/azahar"
+  },
+  {
+    "id": "ares",
+    "title": "ares",
+    "url": "https://github.com/ares-emulator/ares",
+    "focus": "Multisystem accuracy-oriented console hardware emulation",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "ares-emulator/ares"
+  },
+  {
+    "id": "xenia",
+    "title": "Xenia",
+    "url": "https://github.com/xenia-project/xenia",
+    "focus": "Xbox 360: Xenon PowerPC, Xenos GPU, kernel and memory",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "xenia-project/xenia"
+  },
+  {
+    "id": "xemu",
+    "title": "xemu",
+    "url": "https://github.com/xemu-project/xemu",
+    "focus": "Original Xbox: NV2A, x86, HLE/LLE devices",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "xemu-project/xemu"
+  },
+  {
+    "id": "shadps4",
+    "title": "shadPS4",
+    "url": "https://github.com/shadps4-emu/shadPS4",
+    "focus": "PlayStation 4: x86-64 host mapping, AMD GCN GPU, syscalls",
+    "license_note": "GPL-2.0; check files",
+    "kind": "repository",
+    "source_id": "shadps4-emu/shadPS4"
+  },
+  {
+    "id": "ghidra",
+    "title": "Ghidra",
+    "url": "https://github.com/NationalSecurityAgency/ghidra",
+    "focus": "Disassembly, decompilation, p-code, scripting, cross-references",
+    "license_note": "Apache-2.0; check extensions",
+    "kind": "repository",
+    "source_id": "NationalSecurityAgency/ghidra"
+  },
+  {
+    "id": "mgba",
+    "title": "mGBA",
+    "url": "https://github.com/mgba-emu/mgba",
+    "focus": "GB/GBC/GBA CPU, PPU scanlines, DMA, timers",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "mgba-emu/mgba"
+  },
+  {
+    "id": "melonds",
+    "title": "melonDS",
+    "url": "https://github.com/melonDS-emu/melonDS",
+    "focus": "Nintendo DS: ARM9/ARM7, 2D/3D GPU, timers, IPC",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "melonDS-emu/melonDS"
+  },
+  {
+    "id": "cemu",
+    "title": "Cemu",
+    "url": "https://github.com/cemu-project/Cemu",
+    "focus": "Wii U: Cafe OS, PowerPC and GX2 GPU",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "cemu-project/Cemu"
+  },
+  {
+    "id": "duckstation",
+    "title": "DuckStation",
+    "url": "https://github.com/stenzek/duckstation",
+    "focus": "PlayStation 1: MIPS R3000A, GTE, GPU and CD-ROM",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "stenzek/duckstation"
+  },
+  {
+    "id": "dosbox",
+    "title": "DOSBox Staging",
+    "url": "https://github.com/dosbox-staging/dosbox-staging",
+    "focus": "DOS hardware: x86 CPU, VGA, DMA, audio and timing",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "dosbox-staging/dosbox-staging"
+  },
+  {
+    "id": "scummvm",
+    "title": "ScummVM",
+    "url": "https://github.com/scummvm/scummvm",
+    "focus": "Game engine reimplementation and game file formats",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "scummvm/scummvm"
+  },
+  {
+    "id": "mame",
+    "title": "MAME",
+    "url": "https://github.com/mamedev/mame",
+    "focus": "Arcade systems: device graph, clocks, buses, video and audio",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "mamedev/mame"
+  },
+  {
+    "id": "ryujinx-docs",
+    "title": "Ryujinx-derived documentation",
+    "url": "https://docs.ryujinx.app/",
+    "focus": "Switch 1 reference design for ARM64, HLE services, GPU, kernel",
+    "license_note": "Check source provenance and current license",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "pret",
+    "title": "pret decomp projects",
+    "url": "https://pret.github.io/",
+    "focus": "Versioned game disassemblies and decompilation matching workflows",
+    "license_note": "Project-specific game data and license",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "decompme",
+    "title": "decomp.me",
+    "url": "https://www.decomp.me/",
+    "focus": "Function-level decompilation matching, compiler flags, asm diffs",
+    "license_note": "Service and project-specific rules",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "vulkan",
+    "title": "Vulkan specification",
+    "url": "https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html",
+    "focus": "Synchronization, pipeline, descriptors, image layouts, memory model",
+    "license_note": "Khronos documentation",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "d3d12",
+    "title": "Direct3D 12 programming guide",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/directx-12-programming-guide",
+    "focus": "D3D12 resource states, barriers, queues, fences",
+    "license_note": "Microsoft documentation",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "spirv",
+    "title": "SPIR-V specification",
+    "url": "https://registry.khronos.org/SPIR-V/specs/unified1/SPIRV.html",
+    "focus": "Shader IR validation, capabilities, memory semantics",
+    "license_note": "Khronos documentation",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "llvm",
+    "title": "LLVM documentation",
+    "url": "https://llvm.org/docs/",
+    "focus": "JIT/codegen, IR legality, optimization, backends",
+    "license_note": "LLVM documentation",
+    "kind": "documentation",
+    "source_id": null
+  },
+  {
+    "id": "renderdoc",
+    "title": "RenderDoc",
+    "url": "https://github.com/baldurk/renderdoc",
+    "focus": "Frame capture, GPU events, textures, shader debugging",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "baldurk/renderdoc"
+  },
+  {
+    "id": "capstone",
+    "title": "Capstone",
+    "url": "https://github.com/capstone-engine/capstone",
+    "focus": "Cross-architecture disassembly and instruction detail",
+    "license_note": "Review LICENSE and file notices",
+    "kind": "repository",
+    "source_id": "capstone-engine/capstone"
+  },
+  {
+    "id": "serial-rfc",
+    "title": "RFC 1982 serial number arithmetic",
+    "url": "https://www.rfc-editor.org/rfc/rfc1982",
+    "focus": "Finite-width serial comparisons and undefined half-range ordering",
+    "license_note": "Reference only; original Takumi guidance, no upstream implementation copied",
+    "kind": "documentation",
+    "source_id": null,
+    "reviewed": "2026-11-02"
+  },
+  {
+    "id": "d3d12-upload",
+    "title": "Microsoft texture upload footprints",
+    "url": "https://learn.microsoft.com/en-us/windows/win32/direct3d12/upload-and-readback-of-texture-data",
+    "focus": "Row pitch, logical bytes, copy footprints and resource lifetime",
+    "license_note": "Reference only; original Takumi guidance, no upstream implementation copied",
+    "kind": "documentation",
+    "source_id": null,
+    "reviewed": "2026-11-02"
+  },
+  {
+    "id": "python-struct",
+    "title": "Python struct documentation",
+    "url": "https://docs.python.org/3/library/struct.html",
+    "focus": "Explicit byte order, alignment and IEEE binary32 packing",
+    "license_note": "Reference only; original Takumi guidance, no upstream implementation copied",
+    "kind": "documentation",
+    "source_id": null,
+    "reviewed": "2026-11-02"
+  },
+  {
+    "id": "vulkan-sync",
+    "title": "Vulkan synchronization and cache control",
+    "url": "https://docs.vulkan.org/spec/latest/chapters/synchronization.html",
+    "focus": "Execution dependencies, memory availability, visibility and fence scopes",
+    "license_note": "Reference only; original Takumi guidance, no upstream implementation copied",
+    "kind": "documentation",
+    "source_id": null,
+    "reviewed": "2026-11-02"
+  }
+]

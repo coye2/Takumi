@@ -1,0 +1,67 @@
+{
+  "name": "Sumi emulator-engineering diagnostic suite",
+  "version": 1,
+  "warning": "Rubric coverage is a keyword heuristic, NOT proof of correctness, gameplay compatibility, or human-level performance. Validate source and behavior independently.",
+  "cases": [
+    {
+      "id": "gpu-barrier",
+      "field": "Vulkan / Switch GPU",
+      "prompt": "A Switch 2 graphics emulator submits 1,395 presentation events, but every displayed frame is black. Logs mention HADD2 and DEPBAR 0x91A. Give the first four concrete instrumentation steps that distinguish guest render work, render-target writes, barriers and presentation. No unverified conclusions.",
+      "checks": [["render target", "render-target", "color attachment"], ["barrier", "synchronization", "dependency"], ["presentation", "swapchain", "present"], ["capture", "trace", "instrument", "log"]]
+    },
+    {
+      "id": "ps3-mfc",
+      "field": "PlayStation 3 SPU",
+      "prompt": "In a PS3 emulator an SPU MFC DMA transfer reads stale data intermittently after a tag-group wait. Explain how to isolate tag completion, local store timing, memory ordering, and the host-side test you would write.",
+      "checks": [["tag"], ["dma", "mfc"], ["memory order", "ordering", "barrier", "fence"], ["test", "assert", "repro"]]
+    },
+    {
+      "id": "dynarec-code-invalidation",
+      "field": "JIT / CPU emulation",
+      "prompt": "A MIPS or ARM64 dynarec passes CPU unit tests but jumps to stale translated code after the guest modifies an executable page. Outline a correct invalidation model and a regression test.",
+      "checks": [["invalidate", "invalidation"], ["page", "mapping", "protection"], ["cache", "block", "translation"], ["test", "reproduce"]]
+    },
+    {
+      "id": "n64-matching-decomp",
+      "field": "N64 decompilation",
+      "prompt": "You're starting a legally authorized N64 matching decomp from an owned game binary. Explain how to establish ROM/ELF provenance, MIPS ABI, section layout, relocation/symbol map, and iterative matching without pretending you have the original source.",
+      "checks": [["mips", "abi"], ["section", "segment"], ["relocation", "symbol"], ["matching", "byte", "assembly"]]
+    },
+    {
+      "id": "gc-fifo",
+      "field": "GameCube / Wii GPU",
+      "prompt": "A GameCube/Wii emulator drops geometry only when a large GX FIFO display list crosses a ring-buffer wrap. Explain an evidence-first GPU command parser investigation and one randomized wraparound test.",
+      "checks": [["fifo"], ["wrap", "ring", "boundary"], ["display list", "command"], ["test", "random", "property"]]
+    },
+    {
+      "id": "ps2-dma-vif",
+      "field": "PlayStation 2 graphics",
+      "prompt": "A PS2 emulator has intermittent missing triangles after VIF/GIF chains. Identify which DMA transfer, VIF unpack, GIF packet and GS path timings must be captured, and how a short deterministic homebrew test could isolate the issue.",
+      "checks": [["dma"], ["vif"], ["gif"], ["gs", "graphics synthesizer"]]
+    },
+    {
+      "id": "shader-compilation",
+      "field": "Graphics / shader pipelines",
+      "prompt": "An emulator stutters for 250 ms the first time each effect is used. Distinguish shader compilation, pipeline creation, cache I/O and guest scheduling. Propose a non-cheating A/B benchmark with frame-time evidence.",
+      "checks": [["shader", "spir-v"], ["pipeline"], ["cache"], ["frame time", "frame-time", "timestamp", "profil"]]
+    },
+    {
+      "id": "3ds-gpu",
+      "field": "Nintendo 3DS graphics",
+      "prompt": "A Nintendo 3DS emulator has broken vertex lighting. Explain how to isolate PICA200 fixed-function state, shader translation, texture sampling and vertex input mismatch without blaming one subsystem prematurely.",
+      "checks": [["pica200"], ["lighting", "light"], ["vertex"], ["texture", "sampler"]]
+    },
+    {
+      "id": "savestate-repro",
+      "field": "Emulator testing and state",
+      "prompt": "Save states sometimes crash after a minor emulator update. Design a versioned serialization contract, reproducible regression fixture, compatibility handling and non-destructive migration policy.",
+      "checks": [["version", "schema"], ["serialize", "deserial"], ["regression", "test"], ["migration", "backup", "compatib"]]
+    },
+    {
+      "id": "switch-ldn",
+      "field": "Network / emulator services",
+      "prompt": "A Switch emulator enters the game but hangs on an IPC event wait after opening a local multiplayer lobby. Describe tracing of service command IDs, handles, wait semantics and a deterministic harness for the service contract.",
+      "checks": [["ipc"], ["handle"], ["wait", "event"], ["service", "command"]]
+    }
+  ]
+}

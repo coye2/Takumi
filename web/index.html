@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f9f8f6"><meta name="color-scheme" content="light dark">
+  <meta name="description" content="Takumi is your private AI coding workspace.">
+  <link rel="icon" href="/mark-clean.png" type="image/png"><link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/styles.css">
+  <title>Takumi</title>
+</head>
+<body data-theme="porcelain">
+  <svg class="symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 4h4M6 7l1 14h10l1-14M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18h11a4 4 0 1 0-.8-7.9A6 6 0 0 0 5.7 12a3 3 0 0 0 1.3 6Z"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M8 3v6m8-6v6M5 9h14v3a7 7 0 0 1-7 7v3m0-3a7 7 0 0 1-7-7V9Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 12a7.5 7.5 0 0 1-7.5 7.5H7L3.5 21l1-4.5A7.5 7.5 0 1 1 20 12Z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v11H3z"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m13 2-9 12h8l-1 8 9-12h-8z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-6 7-6 11 0 18M12 3c6 7 6 11 0 18"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5a4 4 0 0 0-7 3 4 4 0 0 0-1 6 4 4 0 0 0 4 6 4 4 0 0 0 4-2M12 5a4 4 0 0 1 7 3 4 4 0 0 1 1 6 4 4 0 0 1-4 6 4 4 0 0 1-4-2M12 5v13"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5ZM15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="m7 9 3 3-3 3M13 16h4"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><path d="m12 2 10 10-10 10L2 12zM8 8l8 8M8 8v8"/><circle cx="8" cy="8" r="1"/><circle cx="16" cy="16" r="1"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5.5 9A7.5 7.5 0 0 1 18 7l2 5M4 12l2 5a7.5 7.5 0 0 0 12.5-2"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M2 12h4l3-7 5 14 3-7h5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 9 4v6c0 6-4 9-9 11-5-2-9-5-9-11V6zM8 12l3 3 5-6"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/></symbol>
+  </svg>
+  <div id="app" class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+      <div class="brand"><img class="brand-icon" src="/mark-clean.png" alt="Takumi logo"><span class="brand-name">Takumi</span><button class="icon-button brand-collapse" id="sidebarCollapse" title="Collapse sidebar"><svg><use href="#i-chevron"/></svg></button></div>
+      <button id="newChat" class="new-chat"><svg><use href="#i-plus"/></svg><span>New chat</span><kbd>Ctrl K</kbd></button>
+      <nav class="primary-nav" aria-label="Main navigation">
+        <button data-view="chats" id="navChats" class="nav-item active"><svg><use href="#i-chat"/></svg>Conversations</button>
+        <button data-view="kage" id="navKage" class="nav-item"><svg><use href="#i-chat"/></svg>Kage</button>
+      </nav>
+      <button id="projectQuick" class="sidebar-project-quick" title="Choose a project for coding"><svg><use href="#i-folder"/></svg><span id="projectQuickLabel">Choose project</span><svg class="tiny-chevron"><use href="#i-chevron"/></svg></button>
+      <div class="side-rule"></div>
+      <div class="recents-label">RECENTS</div>
+      <div id="sessionList" class="recent-list" aria-label="Recent conversations"></div>
+      <div class="sidebar-spacer"></div>
+      <div class="local-state"><span class="status-dot" id="sidebarDot"></span><span id="sidebarState">Checking local model</span><span class="gpu-word" id="gpuState">GPU</span></div>
+      <div class="side-rule lower-rule"></div>
+      <div class="profile-row"><button id="profileOpen" class="profile-open" title="Choose or import a profile"><span class="avatar">T</span><span id="profileName">Guest workspace</span></button><button id="sidebarSettings" class="icon-button" title="Settings"><svg><use href="#i-settings"/></svg></button></div>
+    </aside>
+    <div class="mobile-scrim" id="mobileScrim" hidden></div>
+    <main class="main-pane" id="mainPane">
+      <header class="topbar">
+        <button id="mobileMenu" class="icon-button menu-toggle" title="Menu"><svg><use href="#i-menu"/></svg></button>
+        <div class="breadcrumb"><button class="workspace-action" id="workspaceAction" title="Choose project"><span id="workspaceLabel">Workspace</span></button><span class="crumb-separator">/</span><strong id="conversationLabel">New chat</strong></div>
+        <div class="top-actions"><span class="status-indicator"><span class="status-dot" id="headerDot"></span><span id="headerMode">Local mode</span></span><span class="top-divider"></span><label class="model-top-select"><select id="model" aria-label="Model"><option value="">Loading model…</option></select><svg><use href="#i-chevron"/></svg></label><button class="icon-button" id="settingsButton" title="Settings"><svg><use href="#i-settings"/></svg></button></div>
+      </header>
+      <section id="chatView" class="chat-view">
+        <div id="thread" class="thread">
+          <div id="welcome" class="welcome">
+            <div class="welcome-title"><img src="/mark-clean.png" alt="" class="welcome-icon"><div><span class="welcome-eyebrow">TAKUMI <span>匠</span></span><h1>What are we working on?</h1></div></div>
+            <div id="welcomeComposerSlot" class="welcome-composer-slot"></div>
+            <div class="welcome-hint"><span><span class="status-dot"></span>Local session · Files stay on your machine</span><span>Shift + Enter for a new line ↵</span></div>
+          </div>
+          <div id="messages" class="messages" hidden></div>
+        </div>
+        <div class="composer-dock" id="composerDock"><div id="composerHome"></div></div>
+        <div class="composer" id="composer">
+          <textarea id="prompt" rows="2" placeholder="Ask Takumi anything…" aria-label="Message Takumi"></textarea>
+          <div class="composer-toolbar"><div class="composer-left"><button class="icon-button attachment-btn" id="attachmentButton" title="Attach a small text file"><svg><use href="#i-plus"/></svg></button><button class="icon-button" id="voiceMic" type="button" title="Dictate a message" aria-label="Dictate a message" aria-pressed="false"><svg><use href="#i-mic"/></svg></button><button class="icon-button" id="connectionButton" title="Project tools and connections"><svg><use href="#i-plug"/></svg></button><button class="research-toggle" id="researchToggle" title="Allow web research for current answers" type="button">Web · Auto</button><div class="mode-control"><select id="mode" aria-label="Mode"><option value="auto">Auto</option><option value="chat">Ask</option><option value="agent">Work</option></select></div></div>
+            <div class="composer-right"><label class="subtle-select speed-choice" title="Speed profile"><svg><use href="#i-bolt"/></svg><select id="speed"><option value="standard">1×</option><option value="boost">1.5× Boost</option></select></label><label class="subtle-select effort-choice" title="Work depth"><svg><use href="#i-brain"/></svg><select id="effort"><option value="quick">Quick</option><option value="balanced">Balanced</option><option value="high">High reasoning</option><option value="maximum">Maximum</option></select></label><button id="stop" class="send-button stop-button" title="Stop" hidden><svg><use href="#i-stop"/></svg></button><button id="send" class="send-button" title="Send"><svg><use href="#i-send"/></svg></button></div>
+          </div>
+          <input type="file" id="attachment" accept=".txt,.md,.log,.json,.py,.cs,.js,.ts,.rs,.go,.xml,.yaml,.yml" hidden>
+        </div>
+      </section>
+      <section id="contentView" class="content-view" hidden><div class="content-inner"><div id="contentHeading"></div><div id="contentBody"></div></div></section>
+    </main>
+    <aside id="codeWorkspace" class="code-workspace" aria-label="Code workspace" hidden>
+      <div class="code-workspace-top">
+        <div class="code-workspace-heading"><span class="code-kicker">TAKUMI / CODE</span><h2 id="codeWorkspaceName">takumi-code.html</h2></div>
+        <button class="icon-button" id="codeWorkspaceClose" aria-label="Close code workspace" title="Close code workspace"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="code-workspace-tools">
+        <button id="codeWorkspaceCopy" class="code-tool" type="button">Copy</button>
+        <button id="codeWorkspaceSave" class="code-tool" type="button">Download</button>
+        <button id="codeWorkspaceEdit" class="code-tool" type="button">Edit</button>
+        <button id="codePreviewButton" class="code-tool" type="button" hidden>Preview</button>
+        <button id="codeInteractiveButton" class="code-tool" type="button" aria-pressed="false" hidden>Scripts off</button>
+        <button id="codeWorkspaceValidate" class="code-tool" type="button">Check code</button>
+      </div>
+      <p id="codeWorkspaceStatus" class="code-workspace-status" role="status">Not tested</p>
+      <div class="code-workspace-body">
+        <div class="code-source-heading"><span id="codeWorkspaceLanguage">HTML</span><span>Generated source · editable copy</span></div>
+        <pre id="codeWorkspaceSource" class="code-workspace-source"><code id="codeWorkspaceCode"></code></pre>
+        <textarea id="codeWorkspaceEditor" class="code-workspace-editor" aria-label="Edit generated code" spellcheck="false" hidden></textarea>
+        <iframe id="codeWorkspacePreview" class="code-workspace-preview" title="Isolated offline HTML preview" sandbox="" referrerpolicy="no-referrer" hidden></iframe>
+        <div id="codeWorkspaceIssues" class="code-workspace-issues" aria-live="polite"></div>
+      </div>
+      <p class="code-workspace-footnote">Preview is isolated from your files and network. Syntax checks do not guarantee runtime correctness.</p>
+    </aside>
+    <button id="companionButton" class="companion-fab kage-idle" title="Open Kage companions" aria-label="Open Kage companion"><img src="/kage/ren-256.webp" alt="Kage ninja assistant"><span class="kage-presence" aria-hidden="true"></span></button>
+    <aside id="drawer" class="drawer" aria-label="Workspace panel" hidden><div class="drawer-title"><div><span class="drawer-kicker" id="drawerKicker">TAKUMI</span><h2 id="drawerTitle">Workspace</h2></div><button class="icon-button" id="drawerClose" title="Close"><svg><use href="#i-close"/></svg></button></div><div id="drawerBody" class="drawer-body"></div></aside>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <dialog id="projectDialog" class="takumi-dialog"><form id="projectForm"><h2>Choose a project</h2><p>Give Takumi a specific development folder. Work is restricted to this checkout.</p><label for="projectPath">Folder location</label><input id="projectPath" placeholder="C:\\Users\\You\\source\\MyProject" autocomplete="off"><div class="dialog-actions"><button type="button" id="cancelProject" class="text-btn">Cancel</button><button type="button" id="nativePick" class="text-btn">Browse…</button><button class="action-btn" type="submit">Use project</button></div></form></dialog>
+    <dialog id="pairDialog" class="takumi-dialog"><form id="pairForm"><img src="/mark-clean.png" alt="" class="pair-icon"><h2>Connect to your Takumi</h2><p>On your Windows PC, open Settings → iPhone access and generate a private pairing code.</p><label for="pairCode">Pairing code</label><input id="pairCode" inputmode="numeric" autocomplete="one-time-code" placeholder="0000 0000" maxlength="9" required><button class="action-btn full" type="submit">Connect this device</button><p class="pair-error" id="pairError"></p></form></dialog>
+  </div>
+  <script src="/run-stream.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script src="/kage.js" defer></script>
+</body>
+</html>

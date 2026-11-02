@@ -1,0 +1,53 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: python -m unittest discover -s tests -v
+      - run: python -m compileall -q takumi
+      - name: Frontend checks
+        run: |
+          node --check web/app.js
+          node --check web/kage.js
+          node scripts/test-markdown.cjs
+          node tests/test_run_stream.cjs
+  desktop:
+    name: Windows desktop
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build desktop
+        shell: pwsh
+        run: ./scripts/Build-Windows-EXE.ps1
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $bad = Get-ChildItem -LiteralPath dist/Takumi-win-x64 -Recurse -File | Where-Object { $_.Name -match '^(ollama|opencode|claude|codex)(\.|$)' -or $_.Extension -in @('.gguf','.safetensors','.onnx') }
+          if ($bad) { throw 'Unexpected AI engine or model weights in desktop output' }
+          Compress-Archive -Path dist/Takumi-win-x64/* -DestinationPath Takumi-Windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Takumi-Windows-x64
+          path: Takumi-Windows-x64.zip

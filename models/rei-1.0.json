@@ -1,0 +1,19 @@
+{
+  "name": "Rei 1.0",
+  "version": "1.0",
+  "engine_id": "rei-1.0:latest",
+  "base_model": "bonsai-2:9b",
+  "model_kind": "Local engineering profile derived from upstream weights; no neural-network fine-tune claimed",
+  "base_publisher": "Prism ML",
+  "base_license": "Apache-2.0",
+  "base_url": "https://ollama.com/library/bonsai-2:9b",
+  "capabilities": ["multilingual engineering chat", "coding-agent orchestration", "emulator/decomp reference retrieval", "tool use when supported"],
+  "training": "No additional weights or independently trained Rei model are shipped in this release.",
+  "hardware_target": {
+    "gpu": "NVIDIA RTX 5060 8 GB or equivalent",
+    "system_ram_gb_min_recommended": 16,
+    "default_context_tokens": 8192,
+    "maximum_context_tokens_in_takumi": 16384
+  },
+  "released": "2026-11-01"
+}

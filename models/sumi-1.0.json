@@ -1,0 +1,24 @@
+{
+  "name": "Sumi 1.0",
+  "version": "1.0",
+  "engine_id": "sumi-1.0:latest",
+  "base_model": "bonsai-2:27b",
+  "model_kind": "Local engineering profile derived from upstream weights; no neural-network fine-tune claimed",
+  "base_publisher": "Prism ML",
+  "base_license": "Apache-2.0",
+  "base_url": "https://ollama.com/library/bonsai-2:27b",
+  "capabilities": [
+    "engineering dialogue",
+    "emulator/decomp retrieval",
+    "coding-agent orchestration",
+    "source research",
+    "tool calling when supported by installed runtime"
+  ],
+  "training": "No new training run, LoRA weights, or benchmark improvements represented by this release.",
+  "hardware_target": {
+    "gpu": "NVIDIA RTX 4060 Ti 16 GB",
+    "system_ram_gb": 32,
+    "default_context_tokens": 16384
+  },
+  "released": "2026-11-01"
+}
