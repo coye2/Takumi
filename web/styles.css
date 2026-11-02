@@ -215,9 +215,9 @@ html{overscroll-behavior:none}
 .phone-layout .welcome{top:0;margin:0 auto;padding:24px 20px;max-width:100%}
 .phone-layout .welcome-composer-slot{display:none}
 .phone-layout .welcome-title{margin:16px 0 24px}
-.phone-layout .drawer{top:var(--phone-top,0px);bottom:auto;height:var(--phone-height,100dvh);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);max-width:100%}
+.phone-layout .drawer{top:0;bottom:auto;height:var(--phone-height,100dvh);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);max-width:100%}
 .phone-layout .drawer-title{flex-shrink:0}
-.phone-layout .sidebar{height:var(--phone-height,100dvh);top:var(--phone-top,0px);padding-top:env(safe-area-inset-top);padding-bottom:max(16px,env(safe-area-inset-bottom));overscroll-behavior:none}
+.phone-layout .sidebar{height:var(--phone-height,100dvh);top:0;padding-top:env(safe-area-inset-top);padding-bottom:max(16px,env(safe-area-inset-bottom));overscroll-behavior:none}
 .phone-layout :is(.message-body,.card){overflow-wrap:anywhere;min-width:0}
 .phone-layout pre{max-width:100%;overflow:auto;overscroll-behavior:contain}
 .phone-layout dialog{max-height:calc(var(--phone-height,100dvh) - 32px);max-width:calc(100vw - 24px);overflow:auto;overscroll-behavior:contain}
@@ -233,3 +233,5 @@ html{overscroll-behavior:none}
 .phone-layout .sidebar.mobile-open{transform:translateX(0)}
 .phone-layout .drawer:not([hidden]){animation:phone-panel-in 180ms cubic-bezier(.2,.8,.2,1)}
 @keyframes phone-panel-in{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+
+.phone-layout .code-workspace{width:100%;top:0;right:0;bottom:0;max-height:var(--phone-height,100dvh)}

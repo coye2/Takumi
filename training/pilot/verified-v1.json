@@ -1,0 +1,170 @@
+{
+  "version": "verified-coding-pilot-v1",
+  "purpose": "Small synthetic engineering SFT pilot; not frontier qualification",
+  "license": "MIT",
+  "source": "Codex-authored synthetic repository fixtures; no private project data",
+  "generator": "Codex",
+  "validator_sha256": "eddad901783231a9f476867574d7b2d6ef7b64178a01a575fabaaf51af076c3f",
+  "examples": [
+    {
+      "id": "carry32",
+      "project": "cpu-flags",
+      "task_family": "cpu-flags",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return unsigned 32-bit addition carry (0 or 1). Inputs a,b are unsigned 32-bit. Return only Python def f(a,b) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(a,b):\n    return (a+b)>>32"
+        }
+      ]
+    },
+    {
+      "id": "overflow32",
+      "project": "cpu-flags",
+      "task_family": "cpu-flags",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return signed 32-bit addition overflow (0 or 1). Inputs a,b are unsigned bit patterns. Return only Python def f(a,b) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(a,b):\n    return ((~(a^b)&(a^((a+b)&4294967295)))>>31)&1"
+        }
+      ]
+    },
+    {
+      "id": "borrow32",
+      "project": "cpu-flags",
+      "task_family": "cpu-flags",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return unsigned 32-bit subtraction borrow for a-b (0 or 1). Inputs a,b are unsigned 32-bit. Return only Python def f(a,b) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(a,b):\n    return int(a<b)"
+        }
+      ]
+    },
+    {
+      "id": "sign8",
+      "project": "byte-cpu",
+      "task_family": "byte-cpu",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Sign-extend unsigned byte x to a signed Python integer. Return only Python def f(x) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(x):\n    return (x&127)-(x&128)"
+        }
+      ]
+    },
+    {
+      "id": "swap16",
+      "project": "byte-cpu",
+      "task_family": "byte-cpu",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Swap the two bytes of unsigned 16-bit x. Return only Python def f(x) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(x):\n    return ((x&255)<<8)|(x>>8)"
+        }
+      ]
+    },
+    {
+      "id": "little16",
+      "project": "byte-cpu",
+      "task_family": "byte-cpu",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Decode unsigned little-endian 16-bit value from bytes lo,hi. Return only Python def f(lo,hi) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(lo,hi):\n    return lo|(hi<<8)"
+        }
+      ]
+    },
+    {
+      "id": "rotate8",
+      "project": "byte-cpu",
+      "task_family": "byte-cpu",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Rotate unsigned byte x right by n bits. n is nonnegative; wrap the rotation. Return only Python def f(x,n) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(x,n):\n    return ((x>>(n%8))|(x<<(8-n%8)))&255"
+        }
+      ]
+    },
+    {
+      "id": "shift8",
+      "project": "byte-cpu",
+      "task_family": "byte-cpu",
+      "license": "MIT",
+      "verification": {
+        "passed": true,
+        "checked": 256
+      },
+      "messages": [
+        {
+          "role": "user",
+          "content": "Arithmetic right shift an unsigned byte bit-pattern x by n (0..7), returning a signed integer. Return only Python def f(x,n) with one return expression. Use integer operations; no imports."
+        },
+        {
+          "role": "assistant",
+          "content": "def f(x,n):\n    return ((x&127)-(x&128))>>n"
+        }
+      ]
+    }
+  ]
+}

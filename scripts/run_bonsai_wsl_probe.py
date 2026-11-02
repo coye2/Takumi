@@ -22,7 +22,9 @@ def main():
     parser.add_argument("--gguf", required=True, type=Path)
     parser.add_argument("--gguf-python", required=True, type=Path)
     parser.add_argument("--out", required=True, type=Path)
-    parser.add_argument("--smoke-steps", type=int, choices=range(1, 17))
+    parser.add_argument("--smoke-steps", type=int, choices=range(1, 129))
+    parser.add_argument("--dataset", type=Path)
+    parser.add_argument("--max-seconds", type=int, choices=(900, 1800), default=900)
     parser.add_argument("--tokenizer", type=Path)
     parser.add_argument("--reload-from", type=Path)
     parser.add_argument("--cancel-file", type=Path)
@@ -45,6 +47,8 @@ def main():
         cmd += ["--tokenizer", wsl_path(args.tokenizer)]
     if args.reload_from:
         cmd += ["--reload-from", wsl_path(args.reload_from)]
+    if args.dataset:
+        cmd += ['--dataset', wsl_path(args.dataset)]
     started = time.monotonic()
     report = {"command": cmd, "samples": [], "stop_reason": None}
     last_gpu_sample = -10.0
@@ -66,8 +70,8 @@ def main():
             sample = {"seconds": elapsed, "windows_available_bytes": available}
             report["samples"].append(sample)
             cancelled = args.cancel_file and args.cancel_file.exists()
-            if cancelled or available < 2 * 1024**3 or elapsed > 900:
-                report["stop_reason"] = "user stop" if cancelled else "Windows RAM headroom" if available < 2 * 1024**3 else "15-minute bound"
+            if cancelled or available < 2 * 1024**3 or elapsed > args.max_seconds:
+                report["stop_reason"] = "user stop" if cancelled else "Windows RAM headroom" if available < 2 * 1024**3 else f'{args.max_seconds}-second bound'
                 stop_owned_probe()
                 break
             if elapsed - last_gpu_sample >= 2:
@@ -76,9 +80,20 @@ def main():
                 sample["gpu_memory_mib"] = gpu.stdout.strip()
                 sample["gpu_query_exit_code"] = gpu.returncode
                 last_gpu_sample = elapsed
+                if gpu.returncode != 0:
+                    raise RuntimeError('Cannot verify NVIDIA display headroom')
+                free_mib = float(gpu.stdout.strip().splitlines()[0].split(',')[1])
+                if free_mib < 1024:
+                    report['stop_reason'] = 'GPU display headroom below 1 GiB'
+                    stop_owned_probe()
+                    break
             time.sleep(0.5)
     except KeyboardInterrupt:
         report["stop_reason"] = "user interruption"
+        if proc.poll() is None:
+            stop_owned_probe()
+    except Exception as exc:
+        report['stop_reason'] = 'Guard failure: ' + str(exc)
         if proc.poll() is None:
             stop_owned_probe()
     finally:

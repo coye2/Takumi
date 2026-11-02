@@ -16,7 +16,8 @@ def main():
     parser.add_argument("--gguf", required=True)
     parser.add_argument("--gguf-python", required=True)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--smoke-steps", type=int, choices=range(1, 17))
+    parser.add_argument("--smoke-steps", type=int, choices=range(1, 129))
+    parser.add_argument("--dataset", type=Path)
     parser.add_argument("--tokenizer", type=Path)
     parser.add_argument("--reload-from", type=Path)
     args = parser.parse_args()
@@ -76,7 +77,7 @@ def main():
         mx.clear_cache()
         if args.smoke_steps or args.reload_from:
             from training.bonsai.smoke import run
-            result["smoke"] = run(model, args.tokenizer, args.out, args.smoke_steps or 0, args.reload_from)
+            result["smoke"] = run(model, args.tokenizer, args.out, args.smoke_steps or 0, args.reload_from, args.dataset)
             result["optimizer_steps"] = result["smoke"]["optimizer_steps"]
             result["training_performed"] = result["optimizer_steps"] > 0
             result["peak_mlx_memory_bytes"] = mx.get_peak_memory()

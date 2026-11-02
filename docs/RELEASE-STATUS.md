@@ -14,9 +14,24 @@ override requested status-bar colors.
 
 The browser connector successfully connected through the installed OpenCode
 1.19.5 engine. Autonomous model-driven browser task success is not qualified.
-The base model has completed a four-token forward; the exact-model training
-path remains experimental, memory-constrained and not deployable as a qualified
-adapter. See [setup and limits](BROWSER-AND-TRAINING.md).
+The exact 27B base completed real rank-4 LoRA training on its last two MLP
+projections. A 64-step, two-example association diagnostic reduced losses from
+4.597659/4.812826 to 0.004205/0.005114. Frozen array hashes stayed unchanged, and
+disabling the adapter restored base logits exactly. A separately saved two-step
+checkpoint reloaded in a fresh process with zero output difference. These tests
+establish training mechanics, not engineering improvement. The earlier copy
+diagnostic was already solved by the base and worsened after training.
+The coding pilot uses eight independently checked training fixtures and four
+held-out tasks; it remains experimental and cannot promote itself to deployment. See [setup and limits](BROWSER-AND-TRAINING.md).
+
+## Current app checks
+
+193 Python tests ran: 188 passed and five environment-dependent tests were
+skipped. Stream parsing, reconnect/replay, offline-cache exclusions and Markdown
+checks passed. The Windows desktop build and installed native startup passed.
+The phone test preview retained Sage after reload with a 390px viewport, no
+horizontal overflow, fixed header/composer and matching theme-color metadata.
+The installed service retained its paired device and private HTTPS access.
 
 ## Previous preview evidence
 

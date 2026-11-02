@@ -74,6 +74,8 @@ class Trainer:
                         job[key] = {k: v for k, v in data.items() if 'hashes' not in k}
                     except (OSError, ValueError):
                         pass
+                job['optimizer_steps'] = job.get('progress', {}).get('optimizer_steps',
+                    job.get('result', {}).get('optimizer_steps', 0))
                 host = output.with_suffix('.host.json')
                 if job['status'] == 'recovering' and host.exists():
                     self.current['status'] = job['status'] = 'stopped'
@@ -94,13 +96,13 @@ class Trainer:
                     continue
             return {'configured': bool(self.configuration()), 'config': self.configuration(), 'job': job, 'checkpoints': checkpoints,
                     'experimental': True, 'base': 'Exact Sumi Bonsai 2 27B',
-                    'qualification': 'Forward verified. Training, improvement and deployment remain unqualified.'}
+                    'qualification': 'Experimental diagnostic training. Engineering improvement and deployment remain unqualified.'}
 
     def start(self, mode, steps=2, checkpoint_id=None):
-        if mode not in ('forward', 'smoke', 'reload'):
+        if mode not in ('forward', 'smoke', 'reload', 'pilot'):
             raise ValueError('Unknown trainer action')
-        if type(steps) is not int or not 1 <= steps <= 16:
-            raise ValueError('Choose 1–16 diagnostic steps')
+        if type(steps) is not int or not 1 <= steps <= 128:
+            raise ValueError('Choose 1–128 bounded training steps')
         with self.lock:
             if self.current and self.current['status'] not in TERMINAL:
                 raise ValueError('A training check is already active')
@@ -136,8 +138,10 @@ class Trainer:
             for key in ('python', 'gguf', 'gguf_python', 'tokenizer'):
                 cmd += ['--' + key.replace('_', '-'), config[key]]
             cmd += ['--out', str(self.directory / job_id), '--cancel-file', str(cancel)]
-            if mode == 'smoke':
+            if mode in ('smoke', 'pilot'):
                 cmd += ['--smoke-steps', str(steps)]
+            if mode == 'pilot':
+                cmd += ['--dataset',str(self.root/'training/pilot/verified-v1.json'),'--max-seconds','1800']
             if checkpoint:
                 cmd += ['--reload-from', str(checkpoint)]
             with (self.directory / (job_id + '.log')).open('w', encoding='utf-8') as log:

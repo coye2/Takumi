@@ -1,0 +1,25 @@
+{
+  "version": "diagnostic-v2",
+  "purpose": "Arbitrary association memorization diagnostic; excluded from capability evaluation and engineering curriculum",
+  "license": "MIT",
+  "source": "Codex-authored for this repository under the owner's training assignment",
+  "generator": "Codex",
+  "examples": [
+    {
+      "id": "diagnostic-association-m7",
+      "task_family": "diagnostic-only",
+      "messages": [
+        {"role": "user", "content": "Give the assigned label for fixture M7."},
+        {"role": "assistant", "content": "moss-7319"}
+      ]
+    },
+    {
+      "id": "diagnostic-association-k4",
+      "task_family": "diagnostic-only",
+      "messages": [
+        {"role": "user", "content": "Give the assigned label for fixture K4."},
+        {"role": "assistant", "content": "cedar-2846"}
+      ]
+    }
+  ]
+}

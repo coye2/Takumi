@@ -579,7 +579,7 @@ class Agent:
         # Compatibility with v1 of OpenCode (the version initially installed).
         if self.cli_version.startswith("2."):
             if browser_enabled:
-                raise RuntimeError('Browser tools are qualified with OpenCode 1.x; disable them for this engine version.')
+                raise RuntimeError('Browser tools are available with OpenCode 1.x; disable them for this engine version.')
             output = {"$schema": "https://opencode.ai/config.json", "share": "disabled", "permissions": [
                 {"action": "*", "resource": "*", "effect": "allow"},
                 {"action": "external_directory", "resource": "*", "effect": "deny"},

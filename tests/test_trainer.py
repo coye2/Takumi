@@ -58,6 +58,9 @@ class TrainerTests(unittest.TestCase):
         out = self.trainer.directory / ('c'*32); out.mkdir()
         (out / 'result.json').write_text(json.dumps({'status': 'forward_passed', 'optimizer_steps': 0}))
         self.assertEqual(self.trainer.status()['job']['result']['optimizer_steps'], 0)
+        self.assertEqual(self.trainer.status()['job']['optimizer_steps'], 0)
+        (out / 'smoke-progress.json').write_text(json.dumps({'optimizer_steps': 2}))
+        self.assertEqual(self.trainer.status()['job']['optimizer_steps'], 2)
 
 if __name__ == '__main__':
     unittest.main()

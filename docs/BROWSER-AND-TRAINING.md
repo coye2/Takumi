@@ -24,12 +24,20 @@ Official interfaces: [OpenCode MCP](https://opencode.ai/docs/mcp-servers/) and
 The desktop trainer checks the exact Sumi Bonsai 2 27B blob hash and coordinates
 GPU access with Takumi. Configure the existing WSL MLX Python, GGUF reader,
 exact tokenizer and model paths in the trainer. These dependencies and weights
-are not bundled. Actions include a forward check, two diagnostic adapter steps,
-fresh-process checkpoint verification and cooperative Stop. Diagnostic samples
-are not an engineering curriculum. Training does not automatically replace Sumi.
+are not bundled. Actions include a forward check, a bounded 64-step learning check, a 64-step
+coding pilot, fresh-process checkpoint verification and cooperative Stop. The
+learning check memorizes two artificial associations. The pilot trains on eight
+MIT-authored engineering fixtures checked against independent integer oracles,
+then compares four fixed held-out tasks using bounded, non-executing AST checks.
+This small synthetic suite does not establish whole-project coding capability. Training does not automatically replace Sumi.
 
 The Windows guard requires 12 GiB available RAM before loading and stops below
-2 GiB. MLX allocations are capped at 12 GiB and each diagnostic run at 15 minutes.
+2 GiB. The wrapper also stops when observed free GPU memory falls below 1 GiB.
+MLX has a 12 GiB requested allocation limit; this is not a hard cap on all driver
+memory. Each diagnostic run is bounded to 15 minutes; the coding pilot to 30 minutes.
+The frozen 27B base remains exact. Rank-4 adapters target the last two MLP down
+projections (180,224 trainable parameters). Saved adapters can be reloaded for
+verification; optimizer-state resume and a serving/export path are not implemented.
 Keep the base, adapters and local run artifacts outside source control. A saved
 adapter needs numerical checks, independent engineering evaluation and a verified
 serving/export path before deployment. No Claude parity is claimed.
@@ -50,3 +58,9 @@ shell does not provide offline model inference. Physical iPhone keyboard,
 lock/unlock and cellular handoff still require device qualification.
 
 **Sage Green** is available in Appearance and preserves the original logo.
+Theme selection updates the page theme-color and light/dark hints, paints the
+safe-area background and restores the saved appearance before first paint.
+Phone OS/browser versions control the final status-bar and launch-screen
+appearance. Panels respect the device Reduce Motion preference.
+
+Chrome theme-color and Apple standalone behavior follow their supported browser interfaces: [Chrome documentation](https://developer.chrome.com/docs/lighthouse/pwa/themed-omnibox) and [Apple web-app configuration](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html).
