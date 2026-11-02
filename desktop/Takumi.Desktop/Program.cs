@@ -218,12 +218,13 @@ internal sealed class TakumiWindow : Form
             var identity = document.RootElement;
             var version = identity.GetProperty("version").GetString();
             var stamp = identity.GetProperty("build_stamp").GetString();
-            var sourceRoot = identity.GetProperty("source_root").GetString();
+            var diskStamp = identity.GetProperty("disk_build_stamp").GetString();
+            var sourceChanged = identity.GetProperty("source_changed_since_start").GetBoolean();
             var dataRoot = identity.GetProperty("data_root").GetString();
             var expectedData = Environment.GetEnvironmentVariable("TAKUMI_DATA_DIR") ??
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".takumi");
             var matches = version == "1.5.1" && stamp == BuildStamp(root) &&
-                string.Equals(Path.GetFullPath(sourceRoot ?? "").TrimEnd('\\'), Path.GetFullPath(root).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase) &&
+                diskStamp == stamp && !sourceChanged &&
                 string.Equals(Path.GetFullPath(dataRoot ?? ""), Path.GetFullPath(expectedData), StringComparison.OrdinalIgnoreCase);
             if (!matches) LaunchDiagnostics.Write("Different Takumi backend on port " + target + "; not reusing it.");
             return matches;

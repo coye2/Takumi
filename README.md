@@ -8,14 +8,14 @@
 <p align="center">Chat, write code, explore a project, and keep the work on your machine.</p>
 
 <p align="center">
-  <a href="https://github.com/coye2/Takumi/releases"><img alt="Public preview" src="https://img.shields.io/badge/release-1.5.1_preview.1-c48e96"></a>
+  <a href="https://github.com/coye2/Takumi/releases"><img alt="Public preview" src="https://img.shields.io/badge/release-1.5.1_preview.2-c48e96"></a>
   <a href="LICENSE"><img alt="Code license: MIT" src="https://img.shields.io/badge/code-MIT-52637a"></a>
   <a href="https://github.com/coye2/Takumi/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/coye2/Takumi/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="Windows x64" src="https://img.shields.io/badge/desktop-Windows_x64-52637a">
 </p>
 
 <p align="center">
-  <a href="https://github.com/coye2/Takumi/releases/tag/v1.5.1-preview.1"><strong>Download Takumi</strong></a> ·
+  <a href="https://github.com/coye2/Takumi/releases/tag/v1.5.1-preview.2"><strong>Download Takumi</strong></a> ·
   <a href="docs/GETTING-STARTED.md">Getting started</a> ·
   <a href="CONTRIBUTING.md">Contribute</a> ·
   <a href="https://github.com/coye2/Takumi/issues">Issues</a>
@@ -42,7 +42,7 @@ Takumi is an open-source Windows workspace for local AI chat and coding. It brin
 
 ## Get started
 
-Download the **Windows x64** ZIP from [Releases](https://github.com/coye2/Takumi/releases/tag/v1.5.1-preview.1), extract it completely, and open `Takumi.exe`. The portable desktop requires **Windows 10/11 x64, Python 3.11+ and Microsoft Edge WebView2**. The .NET runtime is included in the desktop executable.
+Download the **Windows x64** ZIP from [Releases](https://github.com/coye2/Takumi/releases/tag/v1.5.1-preview.2), extract it completely, and open `Takumi.exe`. The portable desktop requires **Windows 10/11 x64, Python 3.11+ and Microsoft Edge WebView2**. The .NET runtime is included in the desktop executable.
 
 Use **Set up Sumi 1.0** in the app, or `SETUP-SUMI.cmd`, to configure local inference. Setup downloads the separate inference engine and model when needed. For a smaller model, use `SETUP-REI.cmd`. Coding mode also needs the separately installed OpenCode CLI.
 

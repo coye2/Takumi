@@ -1,6 +1,12 @@
 # Release status
 
-**1.5.1-preview.1 · 2026-11-02**
+**1.5.1-preview.2 · 2026-11-02**
+
+Startup hotfix: identical builds launched from different folders now reuse the
+running service when version, source hashes, unchanged on-disk files and data
+directory match. Previously the downloaded copy rejected the installed background
+service by folder path, then hit the shared-data lock. Real Windows startup from
+a separate Downloads folder passed without restarting the background service.
 
 This update adds phone layout/reconnection, theme-aware chrome, an experimental
 exact-model trainer and an optional browser connector. It is not a trained-model
