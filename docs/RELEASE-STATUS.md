@@ -1,10 +1,26 @@
 # Release status
 
-**1.5.0-preview.1 · 2026-11-02**
+**1.5.1-preview.1 · 2026-11-02**
 
-Takumi is an actively developed local AI workspace. The first public release is a preview, with source and Windows x64 downloads. It does not claim frontier-model parity or complete hardware/integration qualification.
+This update adds phone layout/reconnection, theme-aware chrome, an experimental
+exact-model trainer and an optional browser connector. It is not a trained-model
+release or a claim of frontier parity or general Windows UI control.
 
-## Observed before publication
+Phone layout was checked at 320×568, 390×844 and reduced 375×420 viewport sizes.
+Private HTTPS pairing and authenticated API access were exercised. A paired user
+device is registered. Physical iPhone/Android status-bar rendering, keyboard,
+lock/unlock and cellular handoff remain unverified. OS/browser versions may
+override requested status-bar colors.
+
+The browser connector successfully connected through the installed OpenCode
+1.19.5 engine. Autonomous model-driven browser task success is not qualified.
+The base model has completed a four-token forward; the exact-model training
+path remains experimental, memory-constrained and not deployable as a qualified
+adapter. See [setup and limits](BROWSER-AND-TRAINING.md).
+
+## Previous preview evidence
+
+
 
 The development build ran on Windows 11 with an Intel Core i7-14700F, 32 GB RAM and RTX 4060 Ti 16 GB. The installed runtime was Ollama 0.40.13, with the Sumi 1.0 profile over a 26.9B Q2_0 model. Native WebView2 startup and actual local generation were exercised.
 

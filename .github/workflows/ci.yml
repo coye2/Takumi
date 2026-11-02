@@ -30,6 +30,11 @@ jobs:
           node --check web/kage.js
           node scripts/test-markdown.cjs
           node tests/test_run_stream.cjs
+          node tests/test_reconnect.cjs
+          node tests/test_pwa_cache.cjs
+          node --check web/mobile.js
+          node --check web/sw.js
+          node --check web/theme.js
   desktop:
     name: Windows desktop
     runs-on: windows-latest

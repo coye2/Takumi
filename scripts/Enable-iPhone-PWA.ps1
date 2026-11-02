@@ -1,7 +1,7 @@
 # Enables a private tailnet-only connection. Do not use public Tailscale Funnel.
 # Requires Tailscale logged in on both Windows and iPhone, and HTTPS enabled.
 [CmdletBinding()]
-param()
+param([switch]$Confirmed)
 $ErrorActionPreference='Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 if (-not (Get-Command tailscale -ErrorAction SilentlyContinue)) {
@@ -9,14 +9,17 @@ if (-not (Get-Command tailscale -ErrorAction SilentlyContinue)) {
 }
 Write-Host 'Takumi iPhone setup: private tailnet only.' -ForegroundColor Cyan
 Write-Host 'This will create a logon task for Takumi, run the local service on port 8765, and use HTTPS Tailscale Serve.'
-$answer=Read-Host 'Continue? [y/N]'
-if ($answer -notin @('y','Y','yes','YES')) { exit 0 }
+if (-not $Confirmed) {
+  $answer=Read-Host 'Continue? [y/N]'
+  if ($answer -notin @('y','Y','yes','YES')) { exit 0 }
+}
 $taskName='Takumi Background'
 $script=Join-Path $PSScriptRoot 'Launch-Background.ps1'
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "'+$script+'"')
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
 $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Description 'Takumi local AI workspace and optional Discord bot supervisor' -Force | Out-Null
+$settings=New-ScheduledTaskSettingsSet -StartWhenAvailable -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description 'Takumi private phone workspace; starts after sign-in and recovers after failure' -Force | Out-Null
 Start-ScheduledTask -TaskName $taskName
 Start-Sleep -Seconds 3
 try {

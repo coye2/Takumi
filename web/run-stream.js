@@ -66,31 +66,38 @@
     const body={...options,request_id:options.request_id||crypto.randomUUID()};
     let failures=0;
     while(!cursor.terminal){
-      let reader;
+      let reader, timer;
+      const controller=new AbortController();
+      const arm=()=>{clearTimeout(timer);timer=setTimeout(()=>controller.abort(),20000)};
+      const wake=()=>{if(!globalThis.document||document.visibilityState==='visible')controller.abort()};
+      globalThis.addEventListener?.('online',wake);
+      globalThis.document?.addEventListener('visibilitychange',wake);
       try{
+        arm();
         const path=cursor.runId?`/api/runs/${encodeURIComponent(cursor.runId)}/events?after=${cursor.seq}`:'/api/run';
-        const response=await fetch(path,cursor.runId?{headers:{'X-Takumi-Token':token}}:
-          {method:'POST',headers:{'X-Takumi-Token':token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const response=await fetch(path,cursor.runId?{signal:controller.signal,headers:{'X-Takumi-Token':token}}:
+          {signal:controller.signal,method:'POST',headers:{'X-Takumi-Token':token,'Content-Type':'application/json'},body:JSON.stringify(body)});
         if(!response.ok){
           let error={};try{error=await response.json()}catch{}
           const failure=new Error(error.error||`Run connection failed (${response.status})`);
-          failure.permanent=response.status>=400&&response.status<500;throw failure;
+          failure.permanent=response.status>=400&&response.status<500&&![408,429].includes(response.status);throw failure;
         }
         if(!response.body)throw new Error('Streaming unavailable on this device');
         onConnection('connected',cursor.runId);
         reader=response.body.getReader();const queue=[];
         const parser=new SSEParser(event=>{const item=cursor.accept(event);if(item)queue.push(item)});
         while(true){
-          const {value,done}=await reader.read();parser.push(value,done);
+          const {value,done}=await reader.read();arm();parser.push(value,done);
           while(queue.length){failures=0;yield queue.shift()}
           if(cursor.terminal)return;
           if(done)throw new Error('Connection ended before the run outcome was received');
         }
       }catch(error){
-        if(error.permanent||++failures>5){error.outcomeUnknown=!!cursor.runId;throw error}
+        if(error.permanent){error.outcomeUnknown=!!cursor.runId;throw error}
+        failures=Math.min(failures+1,8);
         onConnection('reconnecting',cursor.runId,error.message);
-        await new Promise(resolve=>setTimeout(resolve,Math.min(4000,250*2**(failures-1))+Math.random()*150));
-      }finally{if(reader){try{await reader.cancel()}catch{}}}
+        await new Promise(resolve=>setTimeout(resolve,Math.min(10000,250*2**(failures-1))+Math.random()*150));
+      }finally{clearTimeout(timer);controller.abort();globalThis.removeEventListener?.('online',wake);globalThis.document?.removeEventListener('visibilitychange',wake);if(reader){try{await reader.cancel()}catch{}}}
     }
   }
   const api={SSEParser,RunCursor,subscribe};

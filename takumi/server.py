@@ -23,6 +23,8 @@ from .core import (APP_VERSION, Agent, Storage, installed_models, instruction_pr
                    invalidate_installed_models, explicit_model_refusal, repair_generated_html)
 from .intelligence import LocalMemory, profile_for, safe_temperature, guard_new_run, repo_snapshot, review_prompt
 from .remote import Pairing, remote_mode_enabled
+from .remote import connection_status, keep_phone_service_awake
+from .trainer import Trainer
 from .companion import Companion, BotSupervisor, connections_status
 from .kage import KageManager, context as kage_context
 from .desktop_controls import ProcessSupervisor
@@ -210,6 +212,7 @@ class Runtime:
             is_model_busy=lambda: bool(self.busy) or getattr(self, "_kage_inference", False),
             unload=self._unload_models_for_gpu_test)
         self.harness = Harness(self.store, gpu_scheduler=self.gpu_scheduler)
+        self.trainer = Trainer(self.store.base, ROOT, self.gpu_scheduler)
         self.updater = UpdateManager(self.store.base, APP_VERSION)
         self.provisioner = Provisioner(ROOT)
         self.profiles = ProfileManager(self.store.base)
@@ -281,12 +284,12 @@ class Runtime:
                 self._kage_inference = False
 
     def update_settings(self, body: dict):
-        allowed = {"figma_enabled": [False, True], "refine_reports": [False, True],
+        allowed = {"figma_enabled": [False, True], "browser_enabled": [False, True], "refine_reports": [False, True],
                    "autonomy_passes": [4, 8, 12],
                    "personality": ["precise", "friendly", "technical", "concise", "craftsman"],
                    "theme": ["porcelain", "sumi", "sakura", "matcha", "indigo", "midnight",
                              "washi", "kintsugi", "ume", "yoru", "kyoto", "moss", "sora", "akane", "zen",
-                             "beni", "shinku", "shu", "botan", "tsuki", "ruri"],
+                             "beni", "shinku", "shu", "botan", "tsuki", "ruri", "sage"],
                    "speed": ["standard", "boost"],
                    "effort": ["quick", "balanced", "high", "maximum"],
                    "research_mode": ["auto", "always", "off"],
@@ -621,6 +624,10 @@ def handler_factory(runtime: Runtime):
             if route == "/api/connections":
                 proj = runtime.store.get_project(runtime.store.data.get("active_project"))
                 return self._json(200, connections_status(Path(proj["path"]) if proj else None))
+            if route in ("/api/training", "/api/remote/status"):
+                if self._remote() or not self._api_token_ok():
+                    return self._fail(403, "Manage training and phone setup on the Windows PC")
+                return self._json(200, runtime.trainer.status() if route == "/api/training" else connection_status())
             if route == "/api/pairing/devices":
                 if self._remote():
                     return self._fail(403, "Manage trusted devices from the PC.")
@@ -669,6 +676,16 @@ def handler_factory(runtime: Runtime):
                 return self._fail(403, "Workspace authorization required.")
             try:
                 body = self._read(4_000_000 if route == "/api/kage/avatar/import" else 1_000_000 if route == "/api/profile/import" else 40000)
+                if route.startswith('/api/training/'):
+                    if self._remote():
+                        return self._fail(403, 'Control training from the Windows PC')
+                    if route == '/api/training/configure':
+                        return self._json(200, runtime.trainer.configure(body))
+                    if route == '/api/training/start':
+                        return self._json(202, runtime.trainer.start(body.get('mode'), body.get('steps', 2), body.get('checkpoint_id')))
+                    if route == '/api/training/stop':
+                        return self._json(200, runtime.trainer.stop())
+                    return self._fail(404, 'Unknown training action')
                 if route == "/api/profile/select":
                     if self._remote():
                         return self._fail(403, "Choose the profile from your Windows PC")
@@ -1433,6 +1450,8 @@ def handler_factory(runtime: Runtime):
                                 agent_kwargs["context_tokens"] = profile.context
                             if "figma_enabled" in params:
                                 agent_kwargs["figma_enabled"] = runtime.settings.get("figma_enabled") is True
+                            if "browser_enabled" in params:
+                                agent_kwargs["browser_enabled"] = runtime.settings.get("browser_enabled") is True
                             if "web_enabled" in params:
                                 agent_kwargs["web_enabled"] = runtime.settings.get("research_mode") != "off"
                             context = runtime.memory.context(session.get("project_id")) + "\n" + persona_context
@@ -1678,7 +1697,8 @@ def _serve(port: int, open_browser: bool, base: Path):
     if open_browser:
         threading.Timer(0.55, lambda: webbrowser.open(url)).start()
     try:
-        server.serve_forever(poll_interval=0.2)
+        with keep_phone_service_awake():
+            server.serve_forever(poll_interval=0.2)
     except KeyboardInterrupt:
         pass
     finally:

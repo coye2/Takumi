@@ -30,7 +30,7 @@ try {
     Write-Host 'Building native Takumi.exe with .NET...' -ForegroundColor Cyan
     & $DotnetExe publish $project --configuration Release --runtime $Runtime --self-contained true '-p:PublishSingleFile=true' '-p:IncludeNativeLibrariesForSelfExtract=true' '-p:DebugType=None' '-p:DebugSymbols=false' --output $staging
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed (exit code $LASTEXITCODE). Read the installation log for the compiler error." }
-    foreach ($folder in @('web','takumi','assets','scripts','expertise','models','docs','licenses')) {
+    foreach ($folder in @('web','takumi','assets','scripts','expertise','models','docs','licenses','training')) {
         $path = Join-Path $root $folder
         if (-not (Test-Path -LiteralPath $path)) { throw "Application source folder missing: $folder" }
         Copy-Item -LiteralPath $path -Destination (Join-Path $staging $folder) -Recurse -Force

@@ -154,7 +154,7 @@ try {
             }
         }
         if ($oldLocked) {
-            $dest = Join-Path $installParent ('Takumi-Repaired-1.5.0-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+            $dest = Join-Path $installParent ('Takumi-Repaired-1.5.1-' + [guid]::NewGuid().ToString('N').Substring(0,8))
             Write-Host "Installing corrected app beside the locked installation: $dest"
         }
         try {

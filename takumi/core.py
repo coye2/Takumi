@@ -25,7 +25,7 @@ from .language import resolve_language, model_instruction
 from .models import is_rei, is_sumi_lite
 from .model_transport import open_stream
 
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.5.1"
 PERSONALITIES = {
     "precise": "Be exact, evidence-driven, grounded and calmly decisive.",
     "friendly": "Be warm, collaborative and conversational while remaining rigorous and concise.",
@@ -575,9 +575,11 @@ class Agent:
                 p.kill()
 
     def _config(self, model: str = "", *, context_tokens: int = 16384,
-                figma_enabled: bool = False, web_enabled: bool = True) -> dict:
+                figma_enabled: bool = False, web_enabled: bool = True, browser_enabled: bool = False) -> dict:
         # Compatibility with v1 of OpenCode (the version initially installed).
         if self.cli_version.startswith("2."):
+            if browser_enabled:
+                raise RuntimeError('Browser tools are qualified with OpenCode 1.x; disable them for this engine version.')
             output = {"$schema": "https://opencode.ai/config.json", "share": "disabled", "permissions": [
                 {"action": "*", "resource": "*", "effect": "allow"},
                 {"action": "external_directory", "resource": "*", "effect": "deny"},
@@ -607,6 +609,9 @@ class Agent:
                              "shutdown*": "deny", "taskkill /F*": "deny"}}}
         if figma_enabled:
             output["mcp"] = {"figma": {"type": "remote", "url": "https://mcp.figma.com/mcp", "enabled": True}}
+        if browser_enabled:
+            from .browser_tools import config
+            output.setdefault('mcp', {})['browser'] = config()
         if web_enabled:
             output["permission"]["websearch"] = "allow"
             output["permission"]["webfetch"] = "allow"
@@ -628,7 +633,7 @@ class Agent:
 
     def run(self, prompt: str, project: Path, model: str, native_session: str | None,
             variant: str = "default", *, context_tokens: int = 16384,
-            figma_enabled: bool = False, web_enabled: bool = True) -> Iterator[dict]:
+            figma_enabled: bool = False, web_enabled: bool = True, browser_enabled: bool = False) -> Iterator[dict]:
         if not self.command:
             raise RuntimeError("OpenCode was not found. Install or build it separately; Takumi does not bundle it.")
         if not project.is_dir():
@@ -637,7 +642,8 @@ class Agent:
             raise RuntimeError("This OpenCode version does not advertise --variant; choose Default reasoning for Agent mode.")
         env = os.environ.copy()
         env["OPENCODE_CONFIG_CONTENT"] = json.dumps(
-            self._config(model, context_tokens=context_tokens, figma_enabled=figma_enabled, web_enabled=web_enabled))
+            self._config(model, context_tokens=context_tokens, figma_enabled=figma_enabled, web_enabled=web_enabled,
+                         browser_enabled=browser_enabled))
         env["NO_COLOR"] = "1"
         env["GIT_TERMINAL_PROMPT"] = "0"
         if web_enabled:

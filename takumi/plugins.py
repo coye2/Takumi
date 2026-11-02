@@ -17,6 +17,7 @@ import time
 
 
 CATALOG = [
+    {"id": "browser", "name": "Browser", "kind": "local MCP connector", "description": "Let coding tasks navigate, click, inspect pages and capture screenshots in a separate browser.", "capabilities": ["navigate", "interact", "screenshot"]},
     {"id": "research", "name": "Web Research", "kind": "built-in", "description": "Look up current technical references and collect cited sources.", "capabilities": ["search", "references"]},
     {"id": "github", "name": "GitHub", "kind": "local connector", "description": "Inspect repositories, find source code, review pull requests and push approved changes.", "capabilities": ["code search", "repository", "push"]},
     {"id": "figma", "name": "Figma", "kind": "MCP connector", "description": "Bring design context into coding sessions and edit Figma through an authorized MCP connection.", "capabilities": ["read design", "write design"]},
@@ -48,6 +49,12 @@ def status(settings: dict | None = None) -> list[dict]:
             if entry["installed"]:
                 cmd = [exe, "auth", "status"] if exe == "gh" else [exe, "whoami"]
                 entry["connected"] = _run(cmd, timeout=6)["ok"]
+        elif item["id"] == "browser":
+            from .browser_tools import command
+            entry['installed'] = bool(command())
+            entry['connected'] = False
+            entry['enabled'] = settings.get('browser_enabled') is True
+            entry['note'] = 'Enabled for new coding runs.' if entry['enabled'] else 'Enable after installing browser tools.'
         elif item["id"] == "figma":
             from .core import open_code_path
             entry["installed"] = bool(open_code_path())

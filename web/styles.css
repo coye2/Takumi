@@ -177,3 +177,59 @@ body[data-theme='ruri']{--paper:#1e2e47;--sidebar:#152238;--hover:#304969;--line
 .source-evidence{margin:18px 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:12px}.source-evidence summary{cursor:pointer;color:var(--muted)}.evidence-list{max-height:380px;overflow:auto;margin-top:12px}.evidence-item{padding:12px 0;border-top:1px solid var(--line)}.evidence-item p{line-height:1.6;margin:8px 0}.evidence-item small{overflow-wrap:anywhere}.evidence-item pre{white-space:pre-wrap}.kage-unread{position:absolute;right:4px;top:3px;background:var(--rose);color:var(--paper);border:2px solid var(--paper);border-radius:20px;padding:2px 5px;font:600 11px Arial}
 
 body:is([data-theme="beni"],[data-theme="shinku"],[data-theme="tsuki"],[data-theme="ruri"]) :is(.brand-icon,.small-mark,.welcome-icon){border-radius:50%;background:#faf7ed;object-fit:contain}
+
+/* Sage Green: soft green surfaces with deep botanical text. */
+body[data-theme='sage']{--paper:#eef2e9;--sidebar:#d8e2d3;--hover:#c8d6c1;--line:#bbcbb3;--ink:#25382c;--muted:#536b56;--faded:#6c806b;--bubble:#e1e9d9;--panel:#f6f8f1;--rose:#66825e;--sage:#426b4a;--shadow:0 10px 28px #30462c14}
+
+/* One fixed phone shell; only content regions scroll. Pinch zoom stays enabled. */
+html{overscroll-behavior:none}
+.phone-layout{position:fixed;inset:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.phone-layout .app-shell{height:var(--phone-height,100dvh);transform:translateY(var(--phone-top,0px));overflow:hidden}
+.phone-layout .main-pane{min-height:0;padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.phone-layout .topbar{height:58px;min-height:58px;padding:0 12px;gap:8px;border-bottom:1px solid var(--line);background:var(--paper)}
+.phone-layout .breadcrumb{flex:1;min-width:0;gap:0}
+.phone-layout :is(#workspaceAction,.crumb-separator){display:none}
+.phone-layout .top-actions{gap:4px;flex:none}
+.phone-layout .model-top-select select{max-width:110px;font-size:14px}
+.phone-layout #conversationLabel{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phone-layout :is(.thread,.drawer-body,.content-view,.recent-list){min-height:0;overscroll-behavior:none;-webkit-overflow-scrolling:touch;scrollbar-width:none;overflow-x:hidden}
+.phone-layout .thread{padding-bottom:8px;scroll-padding:16px}
+.phone-layout .drawer-body{flex:1}
+.phone-layout .composer-dock{flex:none;margin:0;padding:8px 10px max(10px,env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line)}
+.phone-layout.keyboard-open .composer-dock{padding-bottom:8px}
+.phone-layout .composer{padding:8px;border-radius:16px;box-shadow:none}
+.phone-layout .composer textarea{height:56px;min-height:48px;max-height:128px;font-size:16px;line-height:1.4;padding:4px 6px;overscroll-behavior:contain}
+.phone-layout .composer-toolbar{gap:4px;min-height:44px;flex-wrap:nowrap}
+.phone-layout .composer-left{min-width:0;gap:0}
+.phone-layout .composer-right .subtle-select{display:none}
+.phone-layout .composer-left #connectionButton{display:inline-flex}
+.phone-layout :is(.icon-button,.send-button){min-width:44px;width:44px;height:44px;flex-shrink:0}
+.phone-layout .research-toggle{min-height:44px;padding:0 6px}
+.phone-layout .mode-control select{min-height:44px;font-size:16px;max-width:65px}
+.phone-layout :is(input,textarea,select){font-size:16px}
+.phone-layout :is(button,summary,a){touch-action:manipulation}
+.phone-layout button{transition:background-color 80ms,color 80ms,transform 80ms}
+.phone-layout button:active:not(:disabled){transform:scale(.97);background:var(--hover)}
+.phone-layout :is(.action-btn,.text-btn,.nav-item,.recent-item){min-height:44px}
+.phone-layout img{-webkit-user-drag:none}
+.phone-layout .welcome{top:0;margin:0 auto;padding:24px 20px;max-width:100%}
+.phone-layout .welcome-composer-slot{display:none}
+.phone-layout .welcome-title{margin:16px 0 24px}
+.phone-layout .drawer{top:var(--phone-top,0px);bottom:auto;height:var(--phone-height,100dvh);padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);max-width:100%}
+.phone-layout .drawer-title{flex-shrink:0}
+.phone-layout .sidebar{height:var(--phone-height,100dvh);top:var(--phone-top,0px);padding-top:env(safe-area-inset-top);padding-bottom:max(16px,env(safe-area-inset-bottom));overscroll-behavior:none}
+.phone-layout :is(.message-body,.card){overflow-wrap:anywhere;min-width:0}
+.phone-layout pre{max-width:100%;overflow:auto;overscroll-behavior:contain}
+.phone-layout dialog{max-height:calc(var(--phone-height,100dvh) - 32px);max-width:calc(100vw - 24px);overflow:auto;overscroll-behavior:contain}
+.phone-layout .companion-fab{bottom:calc(160px + env(safe-area-inset-bottom));width:48px;height:48px}
+.phone-layout.keyboard-open .companion-fab{display:none}
+.phone-layout .sidebar{position:fixed;z-index:30;left:-270px;bottom:auto;box-shadow:6px 0 28px #0001;transition:left .2s}
+.phone-layout .sidebar.mobile-open{left:0}
+.phone-layout .mobile-scrim.visible{display:block;position:fixed;inset:0;background:#0005;z-index:29}
+.phone-layout .menu-toggle{display:inline-flex!important}
+.phone-layout :is(.top-divider,.status-indicator){display:none}
+.phone-layout :is(.main-pane,.topbar,.composer-dock){transition:background-color 160ms ease,color 160ms ease}
+.phone-layout .sidebar{left:0;transform:translateX(-105%);transition:transform 200ms cubic-bezier(.2,.8,.2,1)}
+.phone-layout .sidebar.mobile-open{transform:translateX(0)}
+.phone-layout .drawer:not([hidden]){animation:phone-panel-in 180ms cubic-bezier(.2,.8,.2,1)}
+@keyframes phone-panel-in{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}

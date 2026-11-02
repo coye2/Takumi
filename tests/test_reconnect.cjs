@@ -1,0 +1,30 @@
+const assert=require('node:assert/strict');
+const {subscribe}=require('../web/run-stream.js');
+const nativeTimer=global.setTimeout;
+global.setTimeout=(fn,ms)=>nativeTimer(fn,ms===20000?ms:0);
+const frame=(seq,type)=>new TextEncoder().encode('data: '+JSON.stringify({schema_version:1,session_id:'s',run_id:'r',seq,event_id:`r:${seq}`,payload:{type,text:'saved'}})+'\n\n');
+const response=bytes=>({ok:true,body:new ReadableStream({start(c){c.enqueue(bytes);c.close()}})});
+(async()=>{
+ let calls=[],count=0;
+ global.fetch=async(path,options)=>{calls.push({path,options});if(++count<=7)throw new Error('offline');return response(frame(1,'done'))};
+ let events=[];for await(const event of subscribe({session_id:'s'},'token'))events.push(event);
+ assert.equal(calls.length,8);assert.equal(events.length,1);
+ assert.equal(new Set(calls.map(c=>JSON.parse(c.options.body).request_id)).size,1,'retries retain one idempotency key');
+ calls=[];count=0;
+ global.fetch=async(path,options)=>{calls.push({path,options});return response(frame(++count,count===1?'delta':'done'))};
+ events=[];for await(const event of subscribe({session_id:'s'},'token'))events.push(event);
+ assert.equal(events.length,2);assert.equal(calls[1].path,'/api/runs/r/events?after=1');
+ global.setTimeout=(fn,ms)=>nativeTimer(fn,ms===20000?10:0);
+ count=0;calls=[];
+ global.fetch=async(path,options)=>{
+  calls.push(path);
+  if(++count===1)return {ok:true,body:new ReadableStream({start(c){c.enqueue(frame(1,'delta'));options.signal.addEventListener('abort',()=>c.error(new Error('stalled socket')))}})};
+  return response(frame(2,'done'));
+ };
+ events=[];for await(const event of subscribe({session_id:'s'},'token'))events.push(event);
+ assert.equal(events.length,2);assert.equal(calls[1],'/api/runs/r/events?after=1','stalled stream reconnects from saved cursor');
+ count=0;global.fetch=async()=>{count++;return {ok:false,status:401,json:async()=>({error:'Pair again'})}};
+ await assert.rejects(async()=>{for await(const event of subscribe({session_id:'s'},'bad')){}},/Pair again/);
+ assert.equal(count,1,'authorization rejection must not loop forever');
+ console.log('Passed extended outage, stable request identity, replay cursor and revoked-authorization checks.');
+})().catch(error=>{console.error(error);process.exitCode=1}).finally(()=>{global.setTimeout=nativeTimer});

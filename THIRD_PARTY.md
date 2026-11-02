@@ -17,6 +17,20 @@ Takumi is distributed as original source code or a compiled **Takumi** desktop h
 The Takumi logo and supplied screenshots are owned/provided by the project owner. See `BRANDING.md`; they are not automatically MIT-licensed. For redistributed third-party modified software, each upstream license continues to apply independently.
 
 
+### Optional experimental training tools
+
+Optional browser tools use Microsoft `@playwright/mcp` 0.0.84 (Apache-2.0),
+installed separately from npm together with its pinned Playwright dependencies.
+Neither Node.js, Edge nor this connector is bundled. Source and license:
+https://github.com/microsoft/playwright-mcp.
+
+Optional training tools: `training/bonsai/runtime.py` and `codec.py` adapt the
+runtime distributed in Prism ML's Bonsai 2 MLX pack. Its supplied MIT license is
+retained at `training/bonsai/LICENSE`; source revision and modifications are in
+`training/bonsai/PROVENANCE.md`. MLX, mlx-lm, Transformers and llama.cpp's GGUF
+reader are separately installed tooling. This adds no weights or inference
+executables to the Takumi installer and establishes no trained model release.
+
 ### Rei 1.0 model profile
 
 Rei 1.0 uses separately downloaded Prism ML Bonsai 2 9B weights (`bonsai-2:9b`, Apache-2.0), not included in the Takumi ZIP. See https://ollama.com/library/bonsai-2:9b and the upstream model license for attribution and redistribution terms. Takumi's Modelfile customizes instructions and context settings only; it does not train or distribute independent model weights.

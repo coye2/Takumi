@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.1-preview.1 — 2026-11-02
+
+- Fixed phone shell with independently scrolling content, keyboard viewport handling, larger touch controls and reconnect recovery.
+- Sage Green theme, matching page/system theme metadata and appearance restoration before first paint; reduced-motion-aware panel transitions.
+- Desktop experimental exact-Sumi trainer with memory guards, GPU reservation, cancellation and diagnostic checkpoint verification. No trained model is bundled or promoted.
+- Optional separately installed browser tools for OpenCode 1.x coding runs, with temporary isolated browser sessions.
+- Private phone setup diagnostics, persistent background task and automatic idle-sleep prevention. Manual sleep, sign-out and network loss remain interruptions.
+
 ## 1.5.0-preview.1 — 2026-11-02
 
 First public open-source preview of Takumi.

@@ -13,7 +13,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '1.5.0'
+VERSION = '1.5.1'
 FORBIDDEN = {'.dll','.so','.dylib','.pyd','.whl','.bin','.gguf','.safetensors','.onnx','.zip','.exe'}
 EXCLUDED = {'__pycache__','.git','.pytest_cache','node_modules','upstream-src',
             'third_party_src','.venv','dist','build','.vs','obj','bin'}

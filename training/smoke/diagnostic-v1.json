@@ -1,0 +1,25 @@
+{
+  "version": "diagnostic-v1",
+  "purpose": "Tiny memorization/optimizer diagnostic; excluded from engineering capability evaluation and curriculum splits",
+  "license": "MIT",
+  "source": "Codex-authored for this repository under the owner's training assignment",
+  "generator": "Codex",
+  "examples": [
+    {
+      "id": "diagnostic-marker-a",
+      "task_family": "diagnostic-only",
+      "messages": [
+        {"role": "user", "content": "Reply exactly with TAKUMI_TRAIN_OK."},
+        {"role": "assistant", "content": "TAKUMI_TRAIN_OK"}
+      ]
+    },
+    {
+      "id": "diagnostic-marker-b",
+      "task_family": "diagnostic-only",
+      "messages": [
+        {"role": "user", "content": "Reply exactly with SUMI_CHECK_27."},
+        {"role": "assistant", "content": "SUMI_CHECK_27"}
+      ]
+    }
+  ]
+}

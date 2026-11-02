@@ -8,8 +8,8 @@
     <AssemblyName>Takumi</AssemblyName>
     <RootNamespace>Takumi.Desktop</RootNamespace>
     <ApplicationIcon>../../assets/takumi.ico</ApplicationIcon>
-    <Version>1.5.0</Version>
-    <FileVersion>1.5.0.0</FileVersion>
+    <Version>1.5.1</Version>
+    <FileVersion>1.5.1.0</FileVersion>
     <RuntimeFrameworkVersion>10.0.14</RuntimeFrameworkVersion>
     <Product>Takumi</Product>
     <Description>Takumi — a private AI workspace</Description>

@@ -29,6 +29,12 @@ class RemoteAuthorizationTests(unittest.TestCase):
         data=json.dumps(body).encode() if body is not None else None
         req=urllib.request.Request(self.base+path,data=data,headers=headers or {},method='POST' if data is not None else 'GET')
         with urllib.request.urlopen(req,timeout=5) as r:return json.load(r)
+    def test_sage_and_browser_preferences_persist(self):
+        settings = self.runtime.update_settings({'theme':'sage','browser_enabled':True})
+        self.assertEqual(settings['theme'], 'sage')
+        saved = json.loads(self.runtime.settings_path.read_text())
+        self.assertTrue(saved['browser_enabled'])
+        self.assertEqual(saved['theme'], 'sage')
     def test_remote_requires_tls_and_pairing_even_when_proxy_rewrites_host(self):
         headers={'Host':'127.0.0.1','X-Forwarded-Host':'pc.tailnet.ts.net','X-Forwarded-Proto':'https'}
         with mock.patch.dict(os.environ,{'TAKUMI_TAILSCALE_SERVE':'1'}):
@@ -43,6 +49,10 @@ class RemoteAuthorizationTests(unittest.TestCase):
             authorized=self.request('/api/bootstrap',{**headers,'X-Takumi-Token':paired['token']})
             self.assertEqual(authorized['token'],paired['token'])
             self.assertTrue(authorized['remote'])
+            for path, body in [('/api/training',None),('/api/training/start',{'mode':'smoke'}),('/api/training/stop',{})]:
+                with self.assertRaises(urllib.error.HTTPError) as forbidden:
+                    self.request(path,{**headers,'X-Takumi-Token':paired['token']},body)
+                self.assertEqual(forbidden.exception.code,403)
     def test_pwa_files_have_correct_mime(self):
         req=urllib.request.Request(self.base+'/manifest.webmanifest')
         with urllib.request.urlopen(req) as r:

@@ -131,7 +131,7 @@ internal sealed class TakumiTitleBar : Panel
         {
             "sumi" => "#181D21", "midnight" => "#121722", "yoru" => "#131C29",
             "kintsugi" => "#1B2529", "moss" => "#26382F", "sakura" => "#F6ECEE",
-            "matcha" => "#EAF0E4", "indigo" => "#EAEAF3", "ume" => "#F1E1E5",
+            "sage" => "#D8E2D3", "matcha" => "#EAF0E4", "indigo" => "#EAEAF3", "ume" => "#F1E1E5",
             "washi" => "#F3EEE4", "kyoto" => "#EDE4D7", "sora" => "#D9EAF0",
             "akane" => "#F3DFD4", "zen" => "#E8E6DF", "beni" => "#24171C",
             "shinku" => "#1D1517", "shu" => "#F4E1DA", "botan" => "#EEE1ED",

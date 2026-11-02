@@ -14,7 +14,27 @@ import os
 import secrets
 import threading
 import time
+import subprocess
+import shutil
+import ctypes
+from contextlib import contextmanager
 from pathlib import Path
+
+_awake_active = False
+
+
+@contextmanager
+def keep_phone_service_awake():
+    """Hold only automatic system sleep while private access is running."""
+    global _awake_active
+    if os.name == 'nt' and remote_mode_enabled():
+        _awake_active = bool(ctypes.windll.kernel32.SetThreadExecutionState(0x80000001))
+    try:
+        yield
+    finally:
+        if _awake_active:
+            ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
+        _awake_active = False
 
 
 class Pairing:
@@ -103,3 +123,36 @@ class Pairing:
 
 def remote_mode_enabled() -> bool:
     return os.environ.get("TAKUMI_TAILSCALE_SERVE", "").strip() == "1"
+
+
+def connection_status():
+    """Read-only desktop setup diagnostics; never returns tailnet peer details."""
+    result = {'installed': False, 'connected': False, 'serving': False,
+              'remote_enabled': remote_mode_enabled(), 'url': None, 'keeping_pc_awake': _awake_active}
+    executable = shutil.which('tailscale')
+    if not executable:
+        result['message'] = 'Install Tailscale on this PC and your iPhone, then sign in to the same account.'
+        return result
+    result['installed'] = True
+    try:
+        def read(*args):
+            proc = subprocess.run([executable, *args], capture_output=True, text=True, timeout=5,
+                                  creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            if proc.returncode:
+                raise ValueError('Tailscale is not ready')
+            return json.loads(proc.stdout)
+        status = read('status', '--json')
+        result['connected'] = status.get('BackendState') == 'Running'
+        dns = status.get('Self', {}).get('DNSName', '').rstrip('.')
+        serve = read('serve', 'status', '--json')
+        if dns and dns.endswith('.ts.net'):
+            web = serve.get('Web', {}).get(dns + ':443', {})
+            proxy = web.get('Handlers', {}).get('/', {}).get('Proxy')
+            result['serving'] = proxy in ('http://127.0.0.1:8765', 'http://localhost:8765')
+            if result['serving']:
+                result['url'] = 'https://' + dns
+        result['message'] = ('Ready to pair your iPhone.' if result['serving'] and result['remote_enabled'] else
+                             'Run private phone setup on this PC to finish the connection.')
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        result['message'] = 'Open Tailscale on this PC and finish signing in, then check again.'
+    return result
