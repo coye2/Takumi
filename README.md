@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://github.com/coye2/Takumi/releases"><img alt="Public preview" src="https://img.shields.io/badge/release-1.5.0_preview.1-c48e96"></a>
   <a href="LICENSE"><img alt="Code license: MIT" src="https://img.shields.io/badge/code-MIT-52637a"></a>
-  <a href="https://github.com/coye2/Takumi/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/coye2/Takumi/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/coye2/Takumi/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/coye2/Takumi/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <img alt="Windows x64" src="https://img.shields.io/badge/desktop-Windows_x64-52637a">
 </p>
 
