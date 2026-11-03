@@ -60,6 +60,8 @@ def _get(url: str, max_bytes: int, opener=None) -> bytes:
 
 
 def _asset(release: dict, current: str) -> dict:
+    if release.get('draft') is True or release.get('prerelease') is True:
+        raise ValueError('Preview and draft releases cannot be installed as stable updates')
     release_version = _version(str(release.get('tag_name','')))
     if release_version <= _version(current):
         raise ValueError('No newer release available')
@@ -76,6 +78,46 @@ def _asset(release: dict, current: str) -> dict:
     if not _url_allowed(str(a.get('browser_download_url',''))):
         raise ValueError('Unexpected update archive host')
     return a
+
+
+def _verify_staged_tree(archive: Path, stage: Path) -> None:
+    """Verify source against the downloaded archive again before invoking PowerShell.
+
+    A checksum on the ZIP alone does not guarantee that an extracted script
+    remained unchanged while the user reviewed and staged the update.
+    """
+    stage_root = stage.resolve(strict=True)
+    expected = set()
+    with ZipFile(archive) as z:
+        for info in z.infolist():
+            if info.is_dir():
+                continue
+            parts = PurePosixPath(info.filename).parts
+            if not parts or parts[0] != 'Takumi' or len(parts) < 2:
+                raise ValueError('Invalid file path in the verified update')
+            relative = Path(*parts[1:])
+            expected.add(relative.as_posix())
+            path = stage_root / relative
+            if path.is_symlink() or not path.is_file() or not path.resolve(strict=True).is_relative_to(stage_root):
+                raise ValueError('Staged update file is missing or unsafe: ' + relative.as_posix())
+            if path.stat().st_size != info.file_size:
+                raise ValueError('Staged update file size changed: ' + relative.as_posix())
+            with z.open(info) as official, path.open('rb') as checked:
+                while True:
+                    original = official.read(1024 * 1024)
+                    observed = checked.read(1024 * 1024)
+                    if original != observed:
+                        raise ValueError('Staged update file differs from verified archive: ' + relative.as_posix())
+                    if not original:
+                        break
+    observed = set()
+    for path in stage_root.rglob('*'):
+        if path.is_symlink():
+            raise ValueError('Staged update contains an unexpected link')
+        if path.is_file():
+            observed.add(path.relative_to(stage_root).as_posix())
+    if observed != expected:
+        raise ValueError('Staged update contains missing or extra files; prepare it again')
 
 
 class UpdateManager:
@@ -181,6 +223,7 @@ class UpdateManager:
             raise ValueError('Update manifest changed; download again')
         if hashlib.sha256(Path(manifest['archive']).read_bytes()).hexdigest()!=manifest['sha256']:
             raise ValueError('Downloaded update no longer matches published SHA-256')
+        _verify_staged_tree(Path(manifest['archive']), Path(manifest['staged']))
         script=Path(install_root)/'scripts'/'Apply-Takumi-Update.ps1'
         if not script.is_file():
             raise ValueError('This Takumi build is missing its external update helper')
