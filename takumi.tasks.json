@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "git-status",
+      "name": "Inspect local Git changes",
+      "description": "Read-only worktree status; does not push, merge, reset or modify branches.",
+      "argv": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "cwd": "."
+    },
+    {
+      "id": "git-log",
+      "name": "Inspect recent Git commits",
+      "description": "Read-only log of the five most recent commits.",
+      "argv": [
+        "git",
+        "log",
+        "-5",
+        "--oneline"
+      ],
+      "cwd": "."
+    },
+    {
+      "id": "python-tests",
+      "name": "Run full Python application tests",
+      "description": "Run Python unittest suite without changing the installed application.",
+      "argv": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "cwd": "."
+    },
+    {
+      "id": "js-syntax",
+      "name": "Check Takumi frontend JavaScript",
+      "description": "Syntax only; does not launch or publish a website.",
+      "argv": [
+        "node",
+        "--check",
+        "web/app.js"
+      ],
+      "cwd": "."
+    },
+    {
+      "id": "windows-build",
+      "name": "Compile isolated Windows x64 Takumi build",
+      "description": "Compiles to this checkout's dist/Takumi-win-x64 without installing, terminating processes, or publishing.",
+      "argv": [
+        "powershell.exe",
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/Build-Windows-EXE.ps1"
+      ],
+      "cwd": "."
+    }
+  ]
+}
