@@ -119,8 +119,23 @@ class Approvals:
             name = branch.get("output", "").strip()
             if not branch["ok"] or not name or name in ("main", "master"):
                 raise ValueError("Push a named feature branch, not detached HEAD or a protected default branch")
-            argv = [exe, "push", "-u", "origin", name]
-            title = f"Push feature branch {name} to origin"
+            if not _run([exe, 'check-ref-format', '--branch', name], cwd=project)['ok']:
+                raise ValueError('Invalid feature branch')
+            clean = _run([exe, 'status', '--porcelain'], cwd=project)
+            if not clean['ok'] or clean['output'].strip():
+                raise ValueError('Review and commit your project changes before adding them to GitHub')
+            remote = _run([exe, 'remote', 'get-url', '--push', 'origin'], cwd=project)
+            destination = remote.get('output', '').strip()
+            match = re.fullmatch(r'(?:https://github\.com/|git@github\.com:)([\w.-]+/[\w.-]+?)(?:\.git)?', destination)
+            if not remote['ok'] or not match:
+                raise ValueError('Configure origin as an HTTPS or SSH GitHub repository without embedded credentials')
+            head = _run([exe, 'rev-parse', 'HEAD'], cwd=project)
+            commit = head.get('output', '').strip()
+            if not head['ok'] or not re.fullmatch(r'[0-9a-f]{40,64}', commit):
+                raise ValueError('No committed project changes are available')
+            # Send the reviewed object, even if another process later moves HEAD.
+            argv = [exe, 'push', destination, commit + ':refs/heads/' + name]
+            title = f"Push {match.group(1)} / {name} at {commit[:12]}"
         else:
             raise ValueError("Unsupported publishing action")
         ticket = secrets.token_urlsafe(26)
@@ -142,3 +157,4 @@ class Approvals:
             raise ValueError("Approval expired or was already used")
         result = _run(record["argv"], cwd=Path(record["project"]), timeout=240)
         return {"title": record["title"], **result}
+

@@ -9,9 +9,9 @@ import re
 KNOWN_PROJECTS = {
     "nx infinity": "NX Infinity is Coye's emulator development project, with NX Infinity Core and Nintendo Switch 1 / experimental Switch 2 work. Pokémon Pokopia rendering has been a current engineering target. Exact status requires inspecting the active repository and real logs.",
     "nxi": "NXI is short for NX Infinity, Coye's emulator project. Current game compatibility and build status must be verified against its latest source and actual tests.",
-    "takumi": "Takumi is an AI developer application created by Coye. Sumi 1.0 and Rei 1.0 are its full and lightweight local model profiles; this is a specialized configuration, not a newly pre-trained foundation model.",
-    "rei": "Rei 1.0 is Takumi's lower-memory 9B engineering profile, configured for 8 GB GPUs. Like Sumi, it uses separately installed upstream weights and is not newly retrained.",
-    "sumi": "Sumi 1.0 is the named local engineering model profile for Takumi, created by Coye. It reuses separately licensed base-model weights and does not imply weights were retrained.",
+    "takumi": "Takumi is an AI developer application created by Coye. Sumi 1.1 and Rei 1.1 are its full and lightweight local model profiles; this is a specialized configuration, not a newly pre-trained foundation model.",
+    "rei": "Rei 1.1 is Takumi's lower-memory 9B engineering profile, configured for 8 GB GPUs. Like Sumi, it uses separately installed upstream weights and is not newly retrained.",
+    "sumi": "Sumi 1.1 is the named local engineering model profile for Takumi, created by Coye. It reuses separately licensed base-model weights and does not imply weights were retrained.",
 }
 _NO_SEARCH_CLAIM = re.compile(r"(?i)(?:i\s+(?:do\s+not|don't|can(?:not|'t)|have\s+no)\s+(?:have\s+)?(?:a\s+)?(?:live\s+)?(?:web\s+)?(?:search\s+tool|internet\s+access|search\s+access|access\s+to\s+the\s+internet)|i\s+can\s+only\s+(?:use|work\s+with)\s+(?:my\s+)?training)")
 

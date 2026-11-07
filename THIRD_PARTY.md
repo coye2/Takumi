@@ -12,7 +12,7 @@ Takumi is distributed as original source code or a compiled **Takumi** desktop h
 - **Go** — used only to compile Takumi's own `Takumi-Setup.exe`. No Go runtime installation is needed to run the compiled setup executable.
 - **LLVM/Clang and Khronos glslang** — separately installed, optional source-index/syntax tools. No compiler executables are bundled in the Takumi ZIP. Clang is discovered on PATH or in the standard Windows LLVM directory; glslang is discovered on PATH, in a Vulkan SDK or in the user's separately installed `LocalAppData/Takumi/Tools/glslang/bin`. Upstream source, notices and licenses: https://github.com/llvm/llvm-project and https://github.com/KhronosGroup/glslang. A syntax pass does not establish target dependency, ABI, linking or runtime correctness.
 
-- **Bonsai 2 27B / Sumi 1.0 base** — Sumi 1.0 is a local application profile referencing the separately installed `bonsai-2:27b` upstream model published by Prism ML. The upstream model is listed as Apache-2.0; verify its distributed model card and any third-party terms before redistribution of weights. Takumi redistributes **neither model tensors nor upstream model executables**. See https://ollama.com/library/bonsai-2:27b and https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf. Naming Sumi 1.0 does not imply training or independent ownership of the base weights.
+- **Bonsai 2 27B / Sumi 1.1 base** — Sumi 1.1 is a local application profile referencing the separately installed `bonsai-2:27b` upstream model published by Prism ML. The upstream model is listed as Apache-2.0; verify its distributed model card and any third-party terms before redistribution of weights. Takumi redistributes **neither model tensors nor upstream model executables**. See https://ollama.com/library/bonsai-2:27b and https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf. Naming Sumi 1.1 does not imply training or independent ownership of the base weights. The installed runtime tag remains `sumi-1.0:latest`.
 
 The Takumi logo and supplied screenshots are owned/provided by the project owner. See `BRANDING.md`; they are not automatically MIT-licensed. For redistributed third-party modified software, each upstream license continues to apply independently.
 
@@ -31,6 +31,6 @@ retained at `training/bonsai/LICENSE`; source revision and modifications are in
 reader are separately installed tooling. This adds no weights or inference
 executables to the Takumi installer and establishes no trained model release.
 
-### Rei 1.0 model profile
+### Rei 1.1 model profile
 
-Rei 1.0 uses separately downloaded Prism ML Bonsai 2 9B weights (`bonsai-2:9b`, Apache-2.0), not included in the Takumi ZIP. See https://ollama.com/library/bonsai-2:9b and the upstream model license for attribution and redistribution terms. Takumi's Modelfile customizes instructions and context settings only; it does not train or distribute independent model weights.
+Rei 1.1 uses separately downloaded Prism ML Bonsai 2 9B weights (`bonsai-2:9b`, Apache-2.0), not included in the Takumi ZIP. See https://ollama.com/library/bonsai-2:9b and the upstream model license for attribution and redistribution terms. Takumi's Modelfile customizes instructions and context settings only; it does not train or distribute independent model weights. The installed runtime tag remains `rei-1.0:latest`.

@@ -1,4 +1,4 @@
-# Run Sumi 1.0's real, opt-in local benchmark with a compact four-case profile.
+# Run Sumi 1.1's real, opt-in local benchmark with a compact four-case profile.
 # Add '-Full' for all 10 cases, or '-CompareBase' for an A/B against Bonsai 2.
 [CmdletBinding()]
 param([switch]$Full,[switch]$CompareBase)

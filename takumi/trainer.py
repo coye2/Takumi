@@ -87,7 +87,10 @@ class Trainer:
                         f.seek(max(0, log.stat().st_size - 12000))
                         job['log'] = f.read().decode('utf-8', errors='replace')
             checkpoints = []
-            for result in sorted(self.directory.glob('*/smoke-result.json'), key=lambda p: p.stat().st_mtime, reverse=True)[:30]:
+            finished = list(self.directory.glob('*/smoke-result.json'))
+            parents = {path.parent for path in finished}
+            reports = finished + [path for path in self.directory.glob('*/smoke-progress.json') if path.parent not in parents]
+            for result in sorted(reports, key=lambda p: p.stat().st_mtime, reverse=True)[:30]:
                 try:
                     report = json.loads(result.read_text())
                     if report.get('optimizer_steps', 0) > 0 and (result.parent / 'adapter.safetensors').is_file():
@@ -99,7 +102,7 @@ class Trainer:
                     'qualification': 'Experimental diagnostic training. Engineering improvement and deployment remain unqualified.'}
 
     def start(self, mode, steps=2, checkpoint_id=None):
-        if mode not in ('forward', 'smoke', 'reload', 'pilot'):
+        if mode not in ('forward', 'smoke', 'reload', 'pilot', 'specialist', 'vibe', 'continue'):
             raise ValueError('Unknown trainer action')
         if type(steps) is not int or not 1 <= steps <= 128:
             raise ValueError('Choose 1–128 bounded training steps')
@@ -110,11 +113,14 @@ class Trainer:
             if not config:
                 raise ValueError('Configure the local training environment first')
             checkpoint = None
-            if mode == 'reload':
+            if mode in ('reload', 'continue'):
                 if not isinstance(checkpoint_id, str) or len(checkpoint_id) != 32 or any(c not in '0123456789abcdef' for c in checkpoint_id):
                     raise ValueError('Choose a saved training run')
                 checkpoint = self.directory / checkpoint_id
-                if not (checkpoint / 'smoke-result.json').is_file() or not (checkpoint / 'adapter.safetensors').is_file():
+                progress = (checkpoint / 'smoke-result.json').is_file() or (checkpoint / 'smoke-progress.json').is_file()
+                if not (checkpoint / 'adapter.safetensors').is_file() or not progress:
+                    raise ValueError('That run has no saved adapter')
+                if mode == 'reload' and not (checkpoint / 'smoke-result.json').is_file():
                     raise ValueError('That run has no completed diagnostic checkpoint')
             job_id = uuid.uuid4().hex
             self.scheduler.acquire('training-' + job_id)
@@ -138,11 +144,18 @@ class Trainer:
             for key in ('python', 'gguf', 'gguf_python', 'tokenizer'):
                 cmd += ['--' + key.replace('_', '-'), config[key]]
             cmd += ['--out', str(self.directory / job_id), '--cancel-file', str(cancel)]
-            if mode in ('smoke', 'pilot'):
+            if mode in ('smoke', 'pilot', 'specialist', 'vibe', 'continue'):
                 cmd += ['--smoke-steps', str(steps)]
             if mode == 'pilot':
                 cmd += ['--dataset',str(self.root/'training/pilot/verified-v1.json'),'--max-seconds','1800']
-            if checkpoint:
+            if mode == 'specialist':
+                cmd += ['--dataset',str(self.root/'training/pilot/specialist-v1.json'),'--max-seconds','1800']
+            if mode in ('vibe', 'continue'):
+                # Replies are scored afterward with real toolchains: training.vibe.mlx_eval.
+                cmd += ['--dataset',str(self.root/'training/vibe/vibe-coding-v1.json'),'--max-seconds','3600']
+            if mode == 'continue' and checkpoint:
+                cmd += ['--continue-from', str(checkpoint)]
+            elif checkpoint:
                 cmd += ['--reload-from', str(checkpoint)]
             with (self.directory / (job_id + '.log')).open('w', encoding='utf-8') as log:
                 with self.lock:
@@ -174,3 +187,4 @@ class Trainer:
                 self.current['status'] = 'stopping'
                 self._save()
             return self.status()
+

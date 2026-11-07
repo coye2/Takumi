@@ -96,7 +96,7 @@ class KageManager:
 
     def status(self) -> dict:
         with self.lock:
-            return {"name": "Kage", "model": "Sumi 1.0", "members": list(MEMBERS),
+            return {"name": "Kage", "model": "Sumi 1.1", "members": list(MEMBERS),
                     "selected": self.selected, "monitoring": bool(self.thread and self.thread.is_alive()),
                     "active": self._active, "tasks": [dict(x) for x in self.tasks],
                     "feed": [dict(x) for x in self.feed[-45:]][::-1],

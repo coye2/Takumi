@@ -16,8 +16,8 @@ The reference screenshots supplied by the owner define the layout: warm ivory wo
 
 ## Model identity
 
-**Sumi 1.0** is the user-facing name of Takumi's locally configured model profile. Its original upstream attribution and model source are retained in `THIRD_PARTY.md` and `models/sumi-1.0.json`. Major/minor version increases require measured software or model improvements; an alias alone does not imply new foundation-model training.
+**Sumi 1.1** is the user-facing name of Takumi's locally configured model profile. Its original upstream attribution and model source are retained in `THIRD_PARTY.md` and `models/sumi-1.0.json`. The installed runtime tag remains `sumi-1.0:latest` so existing local weights keep working. This label is the 1.1 profile, not a claim of new foundation-model training.
 
 ## Lightweight model identity
 
-**Rei 1.0** is the distinct lightweight Takumi model profile for 8 GB GPU systems. It runs on separately installed Bonsai 2 9B weights. This is a versioned inference configuration with emulator/decomp/web-engineering instructions and retrieval tools, **not newly trained neural weights**. Sumi 1.0 remains the default full-size profile when hardware supports it. Existing `sumi-1.0-lite` user models are recognized as legacy profiles rather than automatically deleted or renamed.
+**Rei 1.1** is the distinct lightweight Takumi model profile for 8 GB GPU systems. It runs on separately installed Bonsai 2 9B weights. The installed runtime tag remains `rei-1.0:latest`. This is a versioned inference configuration with emulator/decomp/web-engineering instructions and retrieval tools, **not newly trained neural weights**. Sumi 1.1 remains the default full-size profile when hardware supports it. Existing `sumi-1.0-lite` user models are recognized as legacy profiles rather than automatically deleted or renamed.

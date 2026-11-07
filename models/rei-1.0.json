@@ -1,6 +1,6 @@
 {
-  "name": "Rei 1.0",
-  "version": "1.0",
+  "name": "Rei 1.1",
+  "version": "1.1",
   "engine_id": "rei-1.0:latest",
   "base_model": "bonsai-2:9b",
   "model_kind": "Local engineering profile derived from upstream weights; no neural-network fine-tune claimed",

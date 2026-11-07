@@ -18,13 +18,19 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--smoke-steps", type=int, choices=range(1, 129))
     parser.add_argument("--dataset", type=Path)
+    parser.add_argument("--train-config", type=Path)
     parser.add_argument("--tokenizer", type=Path)
     parser.add_argument("--reload-from", type=Path)
+    parser.add_argument("--continue-from", type=Path)
     args = parser.parse_args()
-    if (args.smoke_steps or args.reload_from) and not args.tokenizer:
+    if (args.smoke_steps or args.reload_from or args.continue_from) and not args.tokenizer:
         parser.error("The smoke test requires the exact local tokenizer")
     if args.smoke_steps and args.reload_from:
         parser.error("Reload verification and training must use separate processes")
+    if args.continue_from and not args.smoke_steps:
+        parser.error("Continuing a run requires a step count")
+    if args.continue_from and args.reload_from:
+        parser.error("Reload verification and continued training are separate")
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out / "pid.json").write_text(json.dumps({"pid": os.getpid()}))
     result = {"training_performed": False, "optimizer_steps": 0, "status": "starting"}
@@ -75,9 +81,9 @@ def main():
         (args.out / "result.json").write_text(json.dumps(result, indent=2))
         del logits
         mx.clear_cache()
-        if args.smoke_steps or args.reload_from:
+        if args.smoke_steps or args.reload_from or args.continue_from:
             from training.bonsai.smoke import run
-            result["smoke"] = run(model, args.tokenizer, args.out, args.smoke_steps or 0, args.reload_from, args.dataset)
+            result["smoke"] = run(model, args.tokenizer, args.out, args.smoke_steps or 0, args.reload_from, args.dataset, args.train_config, args.continue_from)
             result["optimizer_steps"] = result["smoke"]["optimizer_steps"]
             result["training_performed"] = result["optimizer_steps"] > 0
             result["peak_mlx_memory_bytes"] = mx.get_peak_memory()

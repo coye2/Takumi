@@ -18,12 +18,12 @@ ROOT = Path(__file__).resolve().parents[1]
 class ReiTests(unittest.TestCase):
     def test_rei_profile_and_upstream_are_honest(self):
         meta = models.rei_manifest()
-        self.assertEqual(meta['name'], 'Rei 1.0')
+        self.assertEqual(meta['name'], 'Rei 1.1')
         self.assertEqual(meta['base_model'], 'bonsai-2:9b')
         self.assertIn('No additional weights', meta['training'])
         self.assertIn('FROM bonsai-2:9b', (ROOT/'models/Rei-1.0.Modelfile').read_text())
         self.assertIn('Rei-1.0.Modelfile', (ROOT/'scripts/Ensure-Sumi-1.0.ps1').read_text())
-        self.assertEqual(models.display_name('rei-1.0:latest'), 'Rei 1.0')
+        self.assertEqual(models.display_name('rei-1.0:latest'), 'Rei 1.1')
 
     def test_rei_registration_never_downloads_on_its_own(self):
         with self.assertRaisesRegex(ValueError, 'base weights'):
@@ -77,7 +77,7 @@ class ReiTests(unittest.TestCase):
         self.assertEqual(resolve_language('Hi', preference='it'), 'it')
         self.assertEqual(resolve_language('Ciao'), 'it')
         prompt = instruction_prompt('Puoi correggere questo shader e testare?', language='it', model='rei-1.0')
-        self.assertIn('Rei 1.0', prompt)
+        self.assertIn('Rei 1.1', prompt)
         self.assertIn('professional Italian', prompt)
         self.assertIn('Keep code', prompt)
 
@@ -96,7 +96,7 @@ class ReiTests(unittest.TestCase):
                 [{'role':'user','content':'Puoi spiegare perché il programma è lento?'}],
                 'rei-1.0:latest','default',threading.Event(),language='auto'))
         system=seen['messages'][0]['content']
-        self.assertIn('Rei 1.0',system)
+        self.assertIn('Rei 1.1',system)
         self.assertIn('professional Italian',system)
         self.assertEqual(seen['options']['num_ctx'],8192)
 

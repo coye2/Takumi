@@ -113,7 +113,7 @@ class LiveUpdateTests(unittest.TestCase):
         self.assertIsNone(calls[0]['session'])
         self.assertEqual(calls[1]['session'],'ses_kept')
         self.assertIn('deterministic fence test',calls[1]['prompt'])
-        self.assertIn('Rei 1.0',calls[0]['prompt'])
+        self.assertIn('Rei 1.1',calls[0]['prompt'])
         events=[json.loads(line[6:]) for line in output['body'].splitlines() if line.startswith('data: ')]
         self.assertEqual([e['index'] for e in events if e['type']=='cycle'],[1,2])
 

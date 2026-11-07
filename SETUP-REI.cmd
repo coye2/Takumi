@@ -13,7 +13,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\Ensure-Su
 set "result=%errorlevel%"
 echo.
 if "%result%"=="0" (
- echo Rei 1.0 setup completed. Open Takumi and select Rei 1.0.
+ echo Rei 1.1 setup completed. Open Takumi and select Rei 1.1.
 ) else (
  echo Setup failed with code %result%. Review the Takumi Logs folder.
 )

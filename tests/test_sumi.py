@@ -13,18 +13,37 @@ ROOT=Path(__file__).resolve().parents[1]
 class SumiReleaseTests(unittest.TestCase):
     def test_identity_is_not_false_training(self):
         m=models.manifest()
-        self.assertEqual(m['name'],'Sumi 1.0')
+        self.assertEqual(m['name'],'Sumi 1.1')
         self.assertEqual(m['base_model'],'bonsai-2:27b')
         self.assertIn('No new training',m['training'])
-        self.assertTrue((ROOT/'models/Sumi-1.0.Modelfile').read_text().startswith('# Sumi 1.0'))
-        self.assertEqual(models.display_name('sumi-1.0:latest'),'Sumi 1.0')
-        self.assertEqual(models.display_name('bonsai-2:27b'),'Local model')
+        self.assertTrue((ROOT/'models/Sumi-1.0.Modelfile').read_text().startswith('# Sumi 1.1'))
+        self.assertEqual(models.display_name('sumi-1.0:latest'),'Sumi 1.1')
+        self.assertEqual(models.display_name('bonsai-2:27b'),'Bonsai 27B')
+        self.assertNotIn('Sumi', models.display_name('bonsai-2:27b'))
 
     def test_prefer_sumi_when_installed(self):
         found=['bonsai-2:27b','sumi-1.0:latest','qwen3:4b']
         self.assertEqual(models.default_model(found),'sumi-1.0:latest')
-        self.assertEqual(models.catalog(found)[0]['label'],'Sumi 1.0')
+        self.assertEqual(models.catalog(found)[0]['label'],'Sumi 1.1')
         self.assertTrue(models.state(found)['installed'])
+
+    def test_model_menu_names_are_unique_and_do_not_call_base_weights_sumi(self):
+        found=['rei-1.0:latest','bonsai-2:9b','sumi-1.0:latest','bonsai2-local:latest','bonsai-2:27b','qwen3:4b']
+        rows=models.catalog(found)
+        labels=[row['label'] for row in rows]
+        self.assertEqual(labels[0],'Sumi 1.1')
+        self.assertEqual(labels[1],'Rei 1.1')
+        self.assertEqual(len(labels),len(set(labels)))
+        by_id={row['id']:row for row in rows}
+        self.assertEqual(by_id['bonsai-2:27b']['label'],'Bonsai 27B')
+        self.assertEqual(by_id['bonsai-2:9b']['label'],'Bonsai 9B')
+        self.assertIn('not the Sumi profile', by_id['bonsai-2:27b']['note'])
+        self.assertIn('not the Rei profile', by_id['bonsai-2:9b']['note'])
+        self.assertNotIn(':', by_id['qwen3:4b']['label'])
+        ui=(ROOT/'web/app.js').read_text(encoding='utf-8')
+        self.assertIn('modelMenuList', ui)
+        self.assertIn('Takumi profiles', ui)
+        self.assertIn("ordered.push(row)", ui)
 
     def test_model_activation_no_download(self):
         with self.assertRaisesRegex(ValueError, 'base weights'):

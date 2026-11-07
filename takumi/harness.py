@@ -5,6 +5,7 @@ Windows user's permissions; use a non-admin Windows account for development.
 """
 from __future__ import annotations
 
+from .toolchains import apply_project_toolchain
 from collections import deque
 import json
 import hashlib
@@ -15,6 +16,7 @@ import secrets
 import shutil
 import signal
 import subprocess
+import sys
 import threading
 import time
 
@@ -43,8 +45,33 @@ def task_definitions(project: Path) -> list[dict]:
             raise ValueError("Invalid or duplicate task ID")
         if not isinstance(argv, list) or not 1 <= len(argv) <= 40 or not all(isinstance(a, str) and 0 < len(a) <= 600 and "\x00" not in a for a in argv):
             raise ValueError("Each task needs an argument list, not a shell command string")
-        if argv[0].lower() in ("cmd", "cmd.exe", "sh", "bash", "powershell", "powershell.exe", "pwsh") and len(argv) < 3:
-            raise ValueError("Interactive shells aren't supported; use a script with -File")
+        shell_name = Path(argv[0]).name.lower()
+        if shell_name in ('powershell', 'powershell.exe', 'pwsh', 'pwsh.exe'):
+            # Never interpret an LLM-provided command string as a PowerShell
+            # command. The selected project must contain the reviewed script.
+            file_options = [i for i, value in enumerate(argv) if value.lower() == '-file']
+            if len(file_options) != 1 or file_options[0] + 1 >= len(argv):
+                raise ValueError('PowerShell tasks require -File and a project-local .ps1 script')
+            if any(arg.lower() in ('-command', '-c', '-encodedcommand', '-enc') for arg in argv[1:]):
+                raise ValueError('Inline PowerShell commands are not supported')
+            pre = argv[1:file_options[0]]
+            i = 0
+            while i < len(pre):
+                flag = pre[i].lower()
+                if flag in ('-noprofile', '-noninteractive'):
+                    i += 1
+                elif flag == '-executionpolicy' and i + 1 < len(pre) and pre[i + 1].lower() in ('bypass', 'remotesigned'):
+                    i += 2
+                else:
+                    raise ValueError('Unsupported PowerShell launch option')
+            try:
+                script = in_project(project, argv[file_options[0] + 1])
+            except (OSError, ValueError) as exc:
+                raise ValueError('PowerShell -File must reference an existing project-local .ps1 script') from exc
+            if not script.is_file() or script.suffix.lower() != '.ps1':
+                raise ValueError('PowerShell -File must reference an existing project-local .ps1 script')
+        elif shell_name in ('cmd', 'cmd.exe', 'sh', 'bash') and len(argv) < 3:
+            raise ValueError('Interactive shells are not supported; use a project script')
         cwd = str(entry.get("cwd", "."))
         in_project(project, cwd, must_be_dir=True)
         protected = entry.get('protected_files', [])
@@ -114,14 +141,15 @@ class Harness:
                     raise ValueError("Task executable must be a file inside the project")
                 argv[0] = str(resolved)
             else:
-                exe = shutil.which(first)
+                # The Windows Store stub can shadow `python` and only prints a message.
+                exe = sys.executable if first.lower() in ('python', 'python3', 'python.exe') else shutil.which(first, path=apply_project_toolchain({"PATH": os.environ.get("PATH", "")}, root, in_project(root, task["cwd"], must_be_dir=True))["PATH"])
                 if not exe:
                     raise ValueError("Task executable not found: " + first)
                 argv[0] = exe
             cwd = in_project(root, task["cwd"], must_be_dir=True)
             if task.get("gpu_exclusive") and self.gpu_scheduler:
                 self.gpu_scheduler.acquire(task_id)
-            env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "DOTNET_CLI_TELEMETRY_OPTOUT": "1"}
+            env = apply_project_toolchain({**os.environ, "GIT_TERMINAL_PROMPT": "0", "DOTNET_CLI_TELEMETRY_OPTOUT": "1"}, root, cwd)
             flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
             try:
                 p = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,

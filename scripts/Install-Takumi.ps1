@@ -154,7 +154,7 @@ try {
             }
         }
         if ($oldLocked) {
-            $dest = Join-Path $installParent ('Takumi-Repaired-1.5.1-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+            $dest = Join-Path $installParent ('Takumi-Repaired-1.6.0-' + [guid]::NewGuid().ToString('N').Substring(0,8))
             Write-Host "Installing corrected app beside the locked installation: $dest"
         }
         try {
@@ -229,12 +229,12 @@ try {
     Write-Host "`nInstalled Takumi.exe: $exe" -ForegroundColor Green
     Write-Host 'Use the Takumi desktop shortcut next time. It opens a native window, not a browser tab.'
     if (-not $SkipModelSetup) {
-        Banner 'Provisioning Sumi 1.0 or Rei 1.0 and local coding dependencies'
-        Write-Host 'The setup selects Sumi 1.0 (~8.3 GB) or Rei 1.0 (~3.2 GB) based on detected hardware.'
+        Banner 'Provisioning Sumi 1.1 or Rei 1.1 and local coding dependencies'
+        Write-Host 'The setup selects Sumi 1.1 (~8.3 GB) or Rei 1.1 (~3.2 GB) based on detected hardware.'
         Write-Host 'The setup never uses a paid model API, and external dependencies are installed separately.'
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $dest 'scripts\Ensure-Sumi-1.0.ps1')
         if ($LASTEXITCODE -ne 0) {
-            throw ('Takumi.exe was installed successfully, but Sumi 1.0 is NOT ready. ' +
+            throw ('Takumi.exe was installed successfully, but Sumi 1.1 is NOT ready. ' +
                    'The model setup error is in the log above. Rerun SETUP-SUMI.cmd from the installed Takumi folder ' +
                    'once the connection or dependency issue has been corrected.')
         }

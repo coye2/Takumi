@@ -22,7 +22,7 @@ internal static class Program
         AppDomain.CurrentDomain.UnhandledException += (_, error) => LaunchDiagnostics.Write("Unhandled exception: " + error.ExceptionObject);
         try
         {
-            LaunchDiagnostics.Write("Takumi.exe started; version 1.5.1 with Sumi 1.0 and Rei 1.0.");
+            LaunchDiagnostics.Write("Takumi.exe started; version 1.6.0 with Sumi 1.1 and Rei 1.1.");
             Application.Run(new TakumiWindow());
         }
         catch (Exception error)
@@ -223,7 +223,7 @@ internal sealed class TakumiWindow : Form
             var dataRoot = identity.GetProperty("data_root").GetString();
             var expectedData = Environment.GetEnvironmentVariable("TAKUMI_DATA_DIR") ??
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".takumi");
-            var matches = version == "1.5.1" && stamp == BuildStamp(root) &&
+            var matches = version == "1.6.0" && stamp == BuildStamp(root) &&
                 diskStamp == stamp && !sourceChanged &&
                 string.Equals(Path.GetFullPath(dataRoot ?? ""), Path.GetFullPath(expectedData), StringComparison.OrdinalIgnoreCase);
             if (!matches) LaunchDiagnostics.Write("Different Takumi backend on port " + target + "; not reusing it.");

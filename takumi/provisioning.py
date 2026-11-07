@@ -18,6 +18,8 @@ import time
 from collections import deque
 from pathlib import Path
 
+from .model_library import library_row
+
 _SECRET = re.compile(r"(?i)(?:(?:api|access|auth|discord|bot)[_ -]?(?:token|key)|token|api[_ -]?key|password|secret)\s*[:=]\s*\S+")
 
 
@@ -32,6 +34,7 @@ class Provisioner:
         self.process: subprocess.Popen | None = None
         self.lines: deque[str] = deque(maxlen=55)
         self.phase = "idle"
+        self.kind = "sumi"
         self.exit_code: int | None = None
         self.started_at: float | None = None
 
@@ -50,27 +53,54 @@ class Provisioner:
         exe = self.executable or shutil.which("powershell.exe")
         if not exe:
             raise RuntimeError("Windows PowerShell is not available. Repair your Windows installation.")
+        args = [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)]
+        if lightweight:
+            args.append("-PreferSmallModel")
+        if skip_coding_agent:
+            args.append("-SkipCodingAgent")
+        return self._begin(args, "Preparing Rei 1.1 (lightweight) or Sumi 1.1 on this PC. Downloads use official sources.", "sumi")
+
+    def install_library(self, tag: str, *, engine: str | None = None) -> dict:
+        """Pull one allowlisted registry tag. The tag argument cannot change the command."""
+        row = library_row(tag)
+        if row is None:
+            raise ValueError("Choose a model from the install list")
+        exe = engine or ollama_executable()
+        if not exe:
+            raise RuntimeError("The local model runtime is not installed. Set up Sumi or Rei first.")
+        return self._begin(
+            [exe, "pull", row["id"]],
+            f"Downloading {row['label']} ({row['id']}). This does not change Sumi or Rei.",
+            "library")
+
+    def install_cline(self, *, npm: str | None = None) -> dict:
+        """Install the official Cline command. It does not replace OpenCode or Sumi."""
+        exe = npm or shutil.which("npm")
+        if not exe:
+            raise RuntimeError("Node.js npm was not found, so Cline was not installed.")
+        return self._begin(
+            [exe, "install", "-g", "cline"],
+            "Installing the Cline command from the official npm package. Sumi, Rei, and OpenCode stay as they are.",
+            "cline")
+
+    def _begin(self, args: list[str], opening: str, kind: str) -> dict:
         with self.lock:
             if self.phase == "running":
-                raise RuntimeError("Sumi installation is already running. Check progress below.")
-            args = [exe, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)]
-            if lightweight:
-                args.append("-PreferSmallModel")
-            if skip_coding_agent:
-                args.append("-SkipCodingAgent")
+                raise RuntimeError("An install is already running. Check progress on the Models page.")
             flags = subprocess.CREATE_NEW_PROCESS_GROUP if self.platform == "nt" and os.name == "nt" else 0
             self.process = subprocess.Popen(
                 args, cwd=str(self.root), stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding="utf-8", errors="replace", bufsize=1,
-                creationflags=flags,
+                creationflags=flags, shell=False,
             )
             self.phase = "running"
+            self.kind = kind
             self.exit_code = None
             self.started_at = time.time()
             self.lines.clear()
-            self.lines.append("Preparing Rei 1.0 (lightweight) or Sumi 1.0 on this PC. Downloads use official sources.")
-            threading.Thread(target=self._collect, daemon=True, name="takumi-sumi-setup").start()
+            self.lines.append(opening)
+            threading.Thread(target=self._collect, daemon=True, name="takumi-" + kind + "-setup").start()
             return self.status()
 
     def _collect(self) -> None:
@@ -88,8 +118,20 @@ class Provisioner:
             with self.lock:
                 self.exit_code = code
                 self.phase = "ready" if code == 0 else "failed"
-                self.lines.append("Model setup complete." if code == 0 else
-                                  "Sumi setup did not complete. See the full log under Takumi\\Logs.")
+                kind = self.kind
+                if code == 0:
+                    self.lines.append({
+                        "library": "Model download finished.",
+                        "cline": "Cline install finished. Run cline auth and choose Ollama on this PC.",
+                    }.get(kind, "Model setup complete."))
+                else:
+                    self.lines.append({
+                        "library": "The model download did not finish. Sumi and Rei were not changed.",
+                        "cline": "Cline install did not finish. Sumi, Rei, and OpenCode were not changed.",
+                    }.get(kind, "Sumi setup did not complete. See the full log under Takumi\\Logs."))
+            if code == 0 and kind == "library":
+                from .core import invalidate_installed_models
+                invalidate_installed_models()
         except Exception:
             with self.lock:
                 self.phase = "failed"
@@ -98,6 +140,22 @@ class Provisioner:
         finally:
             if p.stdout:
                 p.stdout.close()
+
+
+def ollama_executable() -> str | None:
+    found = shutil.which("ollama")
+    if found:
+        return found
+    if os.name != "nt":
+        return None
+    local = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    for path in (
+        local / "Programs" / "Ollama" / "ollama.exe",
+        Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "Ollama" / "ollama.exe",
+    ):
+        if path.is_file():
+            return str(path)
+    return None
 
 
 def start_installed_engine_if_needed() -> bool:

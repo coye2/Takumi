@@ -14,7 +14,7 @@ from takumi import reddit_reader, research
 from takumi.routing import choose_mode
 from takumi.grounding import research_correction
 
-PROMPT = 'review my current switch 2 work in my exampleengine developer repo on github'
+PROMPT = 'review my current switch 2 work in my nxinfinity developer repo on github'
 REDDIT = 'HOW ARE people liking the latest NX Infinity reddit post in r/yuzu'
 A, B = 'a'*40, 'b'*40
 
@@ -25,8 +25,8 @@ class Reader:
         self.paths.append(path)
         if path=='/user': return {'login':'owner'}
         if path.startswith('/user/repos'):
-            rows=[{'name':'Example-Engine-Development','full_name':'owner/Example-Engine-Development','private':True,'default_branch':'main'}]
-            if self.ambiguous: rows.append({**rows[0],'full_name':'other/Example-Engine-Development'})
+            rows=[{'name':'NX-Infinity-Development','full_name':'owner/NX-Infinity-Development','private':True,'default_branch':'main'}]
+            if self.ambiguous: rows.append({**rows[0],'full_name':'other/NX-Infinity-Development'})
             return rows
         if '/branches?' in path:
             return [{'name':'main','commit':{'sha':'c'*40}},
@@ -57,7 +57,7 @@ class RepositoryRoutingTests(unittest.TestCase):
 
     def test_private_repo_distinct_branch_commits_and_real_bytes(self):
         reader=Reader();packet=collect_repository_review(PROMPT,reader=reader)
-        self.assertEqual(packet['repository'],'owner/Example-Engine-Development')
+        self.assertEqual(packet['repository'],'owner/NX-Infinity-Development')
         self.assertTrue(packet['private'])
         self.assertEqual([s['commit'] for s in packet['snapshots']],[A,B])
         self.assertTrue(all('actual source' in f['excerpt'] for s in packet['snapshots'] for f in s['files']))
@@ -69,7 +69,7 @@ class RepositoryRoutingTests(unittest.TestCase):
 
     def test_slash_branch_is_not_mistaken_for_repo(self):
         packet=collect_repository_review(PROMPT+' branch work/switch2-gpu',reader=Reader())
-        self.assertEqual(packet['repository'],'owner/Example-Engine-Development')
+        self.assertEqual(packet['repository'],'owner/NX-Infinity-Development')
         self.assertEqual([s['commit'] for s in packet['snapshots']],[B])
 
     def test_ambiguous_repository_reads_no_source(self):
@@ -107,6 +107,10 @@ class RedditRoutingTests(unittest.TestCase):
         self.assertEqual(reddit_reader.request_scope(REDDIT),{'subreddit':'yuzu','topic':'NX Infinity','post_id':None})
         self.assertTrue(research.should_research('How are people liking NX Infinity in r/yuzu'))
         self.assertFalse(research.should_research(REDDIT,'off'))
+        self.assertFalse(research.should_research('Fix the source of the startup error in the local backend.'))
+        self.assertFalse(research.should_research('Implement the settings page and run the project tests.'))
+        self.assertTrue(research.should_research('Fix the crash, then look up the current OAuth documentation.'))
+        self.assertTrue(research.should_research('find public github shader reference implementations'))
 
     def test_newest_matching_post_comment_sample_and_links(self):
         urls=[]

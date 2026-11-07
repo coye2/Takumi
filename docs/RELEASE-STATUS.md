@@ -1,6 +1,18 @@
 # Release status
 
-**1.5.1-preview.2 · 2026-11-02**
+**1.6.0 · 2026-11-07**
+
+Adds the opt-in Verified build loop, Sumi 1.1 and Rei 1.1 profiles, reviewable project tasks, phone readiness checks and clearer coding-engine failures. Sumi and Rei remain configurations over separately downloaded Bonsai weights; no trained adapter is bundled or promoted.
+
+Verified build was measured on the owner's RTX 4060 Ti 16 GB. With reasoning in the edge-case step, 17 unseen tasks passed hidden tests on 14 with none falsely verified (previous setup: 10, with two falsely verified). A regression rerun on the merged code passed 15 with one falsely verified. `verified` is not proof of correctness: the project's checks may be incomplete. These are small tasks; see [Verified build](VIBE-CODING.md) for every run, including failures.
+
+## Current app checks
+
+On Windows 11, 454 Python tests ran: 439 passed and 15 were skipped (Go and Rust toolchains not installed, symlink privileges, and checks covered by Windows CI or needing a real sign-in window). All seven frontend scripts passed syntax checks, and the five Node reconnect, stream, cache and draft tests passed.
+
+Release preparation first found six failures and two errors, and fixed them before tagging. Reviewing a pull request now stays in chat. The missing-model message names the selected model. Error replies read the request body first, because Windows reset those connections. Node 24 test failures now point at the assertion line and keep the expected and actual values. Two tests had stale expectations, and one public test still checked a disclaimer for themes that are not in the public build.
+
+## 1.5.1-preview.2 · 2026-11-02
 
 Startup hotfix: identical builds launched from different folders now reuse the
 running service when version, source hashes, unchanged on-disk files and data
@@ -30,7 +42,7 @@ diagnostic was already solved by the base and worsened after training.
 The coding pilot uses eight independently checked training fixtures and four
 held-out tasks; it remains experimental and cannot promote itself to deployment. See [setup and limits](BROWSER-AND-TRAINING.md).
 
-## Current app checks
+### App checks
 
 193 Python tests ran: 188 passed and five environment-dependent tests were
 skipped. Stream parsing, reconnect/replay, offline-cache exclusions and Markdown

@@ -4,9 +4,12 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from audit_sumi_training import memory
+from training.bonsai.guard import gpu_streak, request_yield
 
 
 def wsl_path(path):
@@ -24,15 +27,21 @@ def main():
     parser.add_argument("--out", required=True, type=Path)
     parser.add_argument("--smoke-steps", type=int, choices=range(1, 129))
     parser.add_argument("--dataset", type=Path)
-    parser.add_argument("--max-seconds", type=int, choices=(900, 1800), default=900)
+    parser.add_argument("--train-config", type=Path)
+    parser.add_argument("--max-seconds", type=int, choices=(900, 1800, 3600), default=900)
     parser.add_argument("--tokenizer", type=Path)
     parser.add_argument("--reload-from", type=Path)
+    parser.add_argument("--continue-from", type=Path)
     parser.add_argument("--cancel-file", type=Path)
     args = parser.parse_args()
-    if (args.smoke_steps or args.reload_from) and not args.tokenizer:
+    if (args.smoke_steps or args.reload_from or args.continue_from) and not args.tokenizer:
         parser.error("The smoke test requires the exact local tokenizer")
     if args.smoke_steps and args.reload_from:
         parser.error("Reload verification and training must use separate processes")
+    if args.continue_from and not args.smoke_steps:
+        parser.error("Continuing a run requires a step count")
+    if args.continue_from and args.reload_from:
+        parser.error("Reload verification and continued training are separate")
     if args.out.exists():
         raise ValueError("Output directory must not exist")
     if memory()["available_bytes"] < 12 * 1024**3:
@@ -47,12 +56,26 @@ def main():
         cmd += ["--tokenizer", wsl_path(args.tokenizer)]
     if args.reload_from:
         cmd += ["--reload-from", wsl_path(args.reload_from)]
+    if args.continue_from:
+        cmd += ["--continue-from", wsl_path(args.continue_from)]
     if args.dataset:
         cmd += ['--dataset', wsl_path(args.dataset)]
+    if args.train_config:
+        cmd += ['--train-config', wsl_path(args.train_config)]
     started = time.monotonic()
     report = {"command": cmd, "samples": [], "stop_reason": None}
     last_gpu_sample = -10.0
+    low_gpu = 0
     proc = subprocess.Popen(cmd)
+
+    def yield_then_stop():
+        """Ask the trainer to finish the current step, then signal it if it does not."""
+        request_yield(args.out)
+        deadline = time.monotonic() + 45
+        while proc.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.5)
+        if proc.poll() is None:
+            stop_owned_probe()
     def stop_owned_probe():
         pid_file = args.out / "pid.json"
         if not pid_file.exists():
@@ -83,9 +106,10 @@ def main():
                 if gpu.returncode != 0:
                     raise RuntimeError('Cannot verify NVIDIA display headroom')
                 free_mib = float(gpu.stdout.strip().splitlines()[0].split(',')[1])
-                if free_mib < 1024:
+                low_gpu, trip = gpu_streak(free_mib, low_gpu)
+                if trip:
                     report['stop_reason'] = 'GPU display headroom below 1 GiB'
-                    stop_owned_probe()
+                    yield_then_stop()
                     break
             time.sleep(0.5)
     except KeyboardInterrupt:

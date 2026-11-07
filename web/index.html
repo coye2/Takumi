@@ -49,6 +49,7 @@
       <nav class="primary-nav" aria-label="Main navigation">
         <button data-view="chats" id="navChats" class="nav-item active"><svg><use href="#i-chat"/></svg>Conversations</button>
         <button data-view="kage" id="navKage" class="nav-item"><svg><use href="#i-chat"/></svg>Kage</button>
+        <button data-view="models" id="navModels" class="nav-item"><svg><use href="#i-spark"/></svg>Models</button>
       </nav>
       <button id="projectQuick" class="sidebar-project-quick" title="Choose a project for coding"><svg><use href="#i-folder"/></svg><span id="projectQuickLabel">Choose project</span><svg class="tiny-chevron"><use href="#i-chevron"/></svg></button>
       <div class="side-rule"></div>
@@ -64,7 +65,7 @@
       <header class="topbar">
         <button id="mobileMenu" class="icon-button menu-toggle" title="Menu"><svg><use href="#i-menu"/></svg></button>
         <div class="breadcrumb"><button class="workspace-action" id="workspaceAction" title="Choose project"><span id="workspaceLabel">Workspace</span></button><span class="crumb-separator">/</span><strong id="conversationLabel">New chat</strong></div>
-        <div class="top-actions"><span class="status-indicator"><span class="status-dot" id="headerDot"></span><span id="headerMode">Local mode</span></span><span class="top-divider"></span><label class="model-top-select"><select id="model" aria-label="Model"><option value="">Loading model…</option></select><svg><use href="#i-chevron"/></svg></label><button class="icon-button" id="settingsButton" title="Settings"><svg><use href="#i-settings"/></svg></button></div>
+        <div class="top-actions"><span class="status-indicator"><span class="status-dot" id="headerDot"></span><span id="headerMode">Local mode</span></span><span class="top-divider"></span><div class="model-top-select"><select id="model" class="model-native" aria-hidden="true" tabindex="-1"><option value="">Loading model…</option></select><button type="button" id="modelMenu" class="model-menu-button" aria-haspopup="listbox" aria-expanded="false" aria-controls="modelMenuList"><span id="modelMenuLabel">Loading model…</span><svg aria-hidden="true"><use href="#i-chevron"/></svg></button><div id="modelMenuList" class="model-menu" role="listbox" aria-label="Installed models" hidden></div></div><button class="icon-button" id="settingsButton" title="Settings"><svg><use href="#i-settings"/></svg></button></div>
       </header>
       <section id="chatView" class="chat-view">
         <div id="thread" class="thread">
@@ -77,11 +78,12 @@
         </div>
         <div class="composer-dock" id="composerDock"><div id="composerHome"></div></div>
         <div class="composer" id="composer">
+          <div id="attachmentTray" class="attachment-tray" hidden></div>
           <textarea id="prompt" rows="2" placeholder="Ask Takumi anything…" aria-label="Message Takumi"></textarea>
-          <div class="composer-toolbar"><div class="composer-left"><button class="icon-button attachment-btn" id="attachmentButton" title="Attach a small text file"><svg><use href="#i-plus"/></svg></button><button class="icon-button" id="voiceMic" type="button" title="Dictate a message" aria-label="Dictate a message" aria-pressed="false"><svg><use href="#i-mic"/></svg></button><button class="icon-button" id="connectionButton" title="Project tools and connections"><svg><use href="#i-plug"/></svg></button><button class="research-toggle" id="researchToggle" title="Allow web research for current answers" type="button">Web · Auto</button><div class="mode-control"><select id="mode" aria-label="Mode"><option value="auto">Auto</option><option value="chat">Ask</option><option value="agent">Work</option></select></div></div>
+          <div class="composer-toolbar"><div class="composer-left"><button class="icon-button attachment-btn" id="attachmentButton" title="Attach a log, screenshot, or image"><svg><use href="#i-plus"/></svg></button><button class="icon-button" id="voiceMic" type="button" title="Dictate a message" aria-label="Dictate a message" aria-pressed="false"><svg><use href="#i-mic"/></svg></button><button class="icon-button" id="connectionButton" title="Project tools and connections"><svg><use href="#i-plug"/></svg></button><button class="research-toggle" id="researchToggle" title="Allow web research for current answers" type="button">Web · Auto</button><div class="mode-control"><select id="mode" aria-label="Mode"><option value="auto">Auto</option><option value="chat">Ask</option><option value="agent">Work</option></select></div></div>
             <div class="composer-right"><label class="subtle-select speed-choice" title="Speed profile"><svg><use href="#i-bolt"/></svg><select id="speed"><option value="standard">1×</option><option value="boost">1.5× Boost</option></select></label><label class="subtle-select effort-choice" title="Work depth"><svg><use href="#i-brain"/></svg><select id="effort"><option value="quick">Quick</option><option value="balanced">Balanced</option><option value="high">High reasoning</option><option value="maximum">Maximum</option></select></label><button id="stop" class="send-button stop-button" title="Stop" hidden><svg><use href="#i-stop"/></svg></button><button id="send" class="send-button" title="Send"><svg><use href="#i-send"/></svg></button></div>
           </div>
-          <input type="file" id="attachment" accept=".txt,.md,.log,.json,.py,.cs,.js,.ts,.rs,.go,.xml,.yaml,.yml" hidden>
+          <input type="file" id="attachment" accept=".txt,.md,.log,.json,.py,.cs,.js,.ts,.rs,.go,.xml,.yaml,.yml,.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" multiple hidden>
         </div>
       </section>
       <section id="contentView" class="content-view" hidden><div class="content-inner"><div id="contentHeading"></div><div id="contentBody"></div></div></section>
@@ -119,5 +121,6 @@
   <script src="/mobile.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/kage.js" defer></script>
+  <script src="/vibe.js" defer></script>
 </body>
 </html>

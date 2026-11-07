@@ -1,6 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const state={busySessions:[],kageMember:'ren',token:'',remote:false,projects:[],sessions:[],session:null,project:null,models:[],modelCatalog:[],sumi:null,model:'',mode:'auto',effort:'balanced',speed:'standard',reasoning:'default',nativeLevels:['default'],busy:false,events:[],stream:'',view:'chats',settings:{},gpu:null,stopRequested:false,runId:null,tailFollow:true,codeWorkspace:null, voiceRecognizer:null,voiceListening:false};
+const state={busySessions:[],kageMember:'ren',token:'',remote:false,projects:[],sessions:[],session:null,project:null,models:[],modelCatalog:[],sumi:null,model:'',mode:'auto',effort:'balanced',speed:'standard',reasoning:'default',nativeLevels:['default'],modelVision:false,pending:[],busy:false,events:[],stream:'',view:'chats',settings:{},gpu:null,stopRequested:false,runId:null,tailFollow:true,codeWorkspace:null, voiceRecognizer:null,voiceListening:false};
 const icon=(name,size=18)=>`<svg width="${size}" height="${size}"><use href="#i-${name}"></use></svg>`;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast=(message,delay=6000)=>{const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.hidden=true,delay)};
@@ -12,14 +12,14 @@ function voiceSpeak(text){
   if(state.settings.voice_output!==true||!('speechSynthesis' in window))return;
   const cleaned=String(text||'').replace(/```[\s\S]*?```/g,' [code block omitted] ').replace(/[<>{}*_#]/g,'').slice(0,1700);
   if(!cleaned.trim())return;
-  try{window.speechSynthesis.cancel();const utter=new SpeechSynthesisUtterance(cleaned);utter.lang=state.settings.language==='it'?'it-IT':(/\b(?:il|la|questo|sono|posso|grazie)\b/i.test(cleaned)?'it-IT':'en-US');utter.rate=1.07;window.speechSynthesis.speak(utter)}catch{}
+  try{window.speechSynthesis.cancel();const utter=new SpeechSynthesisUtterance(cleaned);utter.lang=speechTag(cleaned);utter.rate=1.07;window.speechSynthesis.speak(utter)}catch{}
 }
 function voiceDictate(){
   const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!Rec)return toast('Microphone dictation is not available in this Windows/WebView version. You can still type.');
   if(state.voiceListening){try{state.voiceRecognizer?.stop()}catch{};return}
   const recognition=new Rec();state.voiceRecognizer=recognition;
-  recognition.lang=state.settings.language==='it'?'it-IT':state.settings.language==='en'?'en-US':(navigator.language||'en-US');
+  recognition.lang=speechTag();
   recognition.interimResults=true;recognition.continuous=false;recognition.maxAlternatives=1;
   const previous=$('prompt').value;let transcript='';
   recognition.onresult=e=>{transcript=Array.from(e.results).map(r=>r[0].transcript).join(' ');$('prompt').value=(previous+' '+transcript).trim()};
@@ -31,7 +31,7 @@ function voiceDictate(){
 
 function selectedProject(){return state.projects.find(x=>x.id===state.project)||null}
 function saveLocalToken(){if(state.remote&&state.token)localStorage.setItem('takumi-pair-token',state.token)}
-async function api(path,data=null){const headers={'X-Takumi-Token':state.token};const opt={headers};if(data!==null){opt.method='POST';headers['Content-Type']='application/json';opt.body=JSON.stringify(data)}if(data===null)opt.signal=AbortSignal.timeout(15000);const r=await fetch(path,opt);let result={};try{result=await r.json()}catch{}if(!r.ok){const error=new Error(result.error||`Request failed (${r.status})`);error.status=r.status;throw error;}return result}
+async function api(path,data=null){const headers={'X-Takumi-Token':state.token};const opt={headers};if(data!==null){opt.method='POST';headers['Content-Type']='application/json';opt.body=JSON.stringify(data)}if(data===null)opt.signal=AbortSignal.timeout(path==='/api/host/readiness'?90000:15000);const r=await fetch(path,opt);let result={};try{result=await r.json()}catch{}if(!r.ok){const error=new Error(result.error||`Request failed (${r.status})`);error.status=r.status;throw error;}return result}
 // Markdown remains dependency-free and offline. Code fences are parsed from the
 // *raw* model text before escaping; this preserves quotes, indentation, and HTML.
 const codeByBody = new WeakMap();
@@ -155,16 +155,58 @@ function bindCodeWorkspace(){
 }
 
 function showView(view){state.view=view;document.querySelectorAll('[data-view]').forEach(el=>el.classList.toggle('active',el.dataset.view===view));const chat=['chats','kage'].includes(view);$('chatView').hidden=!chat;$('contentView').hidden=chat;if(!chat)renderContent();closeMobile()}
-function modelLabel(id){return state.modelCatalog.find(m=>m.id===id)?.label||id}
+function modelRecord(id){return state.modelCatalog.find(m=>m.id===id)||{id,label:id,note:'Installed on this PC',model_class:'Installed local model'}}
+function modelLabel(id){return modelRecord(id).label||id}
 function rememberModelChoice(){try{if(state.model)localStorage.setItem('takumi-selected-model',state.model)}catch{}}
-function renderModelOptions(models){
-  state.models=models||[];const sel=$('model');const current=state.model||(()=>{try{return localStorage.getItem('takumi-selected-model')||''}catch{return ''}})();sel.replaceChildren();
-  if(!models.length){sel.add(new Option('Set up local model',''));state.model='';return}
-  for(const m of models)sel.add(new Option(modelLabel(m),m));
-  state.model=models.includes(current)?current:(models.find(m=>/^sumi-1\.0(?::latest)?$/.test(m))||models.find(m=>/^rei-1\.0(?::latest)?$/.test(m))||models.find(m=>/^sumi-1\.0-lite(?::latest)?$/.test(m))||models[0]);
-  sel.value=state.model;refreshNativeLevels();
+function closeModelMenu(){const menu=$('modelMenu'),list=$('modelMenuList');if(!menu||!list)return;menu.setAttribute('aria-expanded','false');list.hidden=true}
+function syncModelMenu(){
+  const label=$('modelMenuLabel'),list=$('modelMenuList'),sel=$('model');if(!label||!sel)return;
+  const id=sel.value||'';
+  label.textContent=id?modelLabel(id):(state.models.length?'Choose a model':'Set up a model');
+  if($('modelMenu'))$('modelMenu').setAttribute('aria-label',id?('Model: '+label.textContent):'Model');
+  if(!list)return;
+  for(const item of list.querySelectorAll('[role=option]'))item.setAttribute('aria-selected',String(item.dataset.value===id));
 }
-async function refreshNativeLevels(){const selected=state.reasoning;state.nativeLevels=['default'];if(!state.model){state.reasoning='default';return}try{const r=await api('/api/reasoning/'+encodeURIComponent(state.model));if(r.verified)state.nativeLevels=r.levels||['default']}catch{}state.reasoning=state.nativeLevels.includes(selected)?selected:'default'}
+function chooseModel(id){
+  const sel=$('model');if(!sel||sel.disabled||!id)return;
+  state.model=id;sel.value=id;rememberModelChoice();syncModelMenu();closeModelMenu();refreshNativeLevels();
+}
+function openModelMenu(){
+  const menu=$('modelMenu'),list=$('modelMenuList');if(!menu||!list||menu.disabled)return;
+  if(!state.models.length){showView('models');return}
+  menu.setAttribute('aria-expanded','true');list.hidden=false;
+  const selected=list.querySelector('[aria-selected=true]')||list.querySelector('[role=option]');
+  selected?.focus();
+}
+function renderModelOptions(models){
+  state.models=models||[];const sel=$('model');const list=$('modelMenuList');
+  const current=state.model||(()=>{try{return localStorage.getItem('takumi-selected-model')||''}catch{return ''}})();
+  sel.replaceChildren();if(list)list.replaceChildren();
+  const ordered=[];const seen=new Set();
+  for(const row of state.modelCatalog){if(models.includes(row.id)&&!seen.has(row.id)){ordered.push(row);seen.add(row.id)}}
+  for(const id of models){if(!seen.has(id)){ordered.push(modelRecord(id));seen.add(id)}}
+  if(!ordered.length){sel.add(new Option('Set up a model',''));state.model='';syncModelMenu();return}
+  let group='';
+  for(const row of ordered){
+    sel.add(new Option(row.label,row.id));
+    if(!list)continue;
+    const heading=row.model_class==='Takumi engineering profile'?'Takumi profiles':'Other models on this PC';
+    if(heading!==group){group=heading;list.append(el('div','model-menu-group',heading))}
+    const item=el('button','model-menu-item');item.type='button';item.setAttribute('role','option');item.dataset.value=row.id;
+    item.append(el('strong','',row.label),el('small','',row.note||'Installed on this PC'));
+    item.onclick=()=>chooseModel(row.id);
+    list.append(item);
+  }
+  if(list){
+    const add=el('button','model-menu-item');add.type='button';
+    add.append(el('strong','','Add a model'),el('small','','Qwen, other local models, and Cline'));
+    add.onclick=()=>{closeModelMenu();showView('models')};
+    list.append(add);
+  }
+  state.model=models.includes(current)?current:(models.find(m=>/^sumi-1\.0(?::latest)?$/.test(m))||models.find(m=>/^rei-1\.0(?::latest)?$/.test(m))||models.find(m=>/^sumi-1\.0-lite(?::latest)?$/.test(m))||models[0]);
+  sel.value=state.model;syncModelMenu();refreshNativeLevels();
+}
+async function refreshNativeLevels(){const selected=state.reasoning;state.nativeLevels=['default'];state.modelVision=false;if(!state.model){state.reasoning='default';return}try{const r=await api('/api/reasoning/'+encodeURIComponent(state.model));state.modelVision=r.vision===true;if(r.verified)state.nativeLevels=r.levels||['default']}catch{}state.reasoning=state.nativeLevels.includes(selected)?selected:'default'}
 function syncDesktopChrome(){
   window.syncPhoneChrome?.();
   try{window.chrome?.webview?.postMessage(JSON.stringify({type:'takumi.theme',theme:document.body.dataset.theme||'porcelain'}))}
@@ -235,7 +277,8 @@ function evidencePanel(report){
   }}
   filter.onchange=draw;panel.append(summary,el('p','muted',report.scope),filter,list);if(report.truncated)panel.append(el('p','muted','Showing the first 100 statements.'));draw();return panel;
 }
-function makeMessage(m){const wrapper=document.createElement('article');wrapper.className='message '+(m.role==='user'?'user':'assistant');if(m.role==='user'){const bubble=document.createElement('div');bubble.className='user-bubble';bubble.textContent=m.content||'';wrapper.appendChild(bubble);return wrapper}const header=document.createElement('div');header.className='assistant-head';const img=document.createElement('img');img.className='small-mark';img.src='/mark-clean.png';img.alt='';header.append(img,document.createTextNode('Takumi'));wrapper.appendChild(header);const content=document.createElement('div');content.className='message-body';content._codeValidation=m.code_validation||null;renderMarkdown(content,m.content||'');wrapper.appendChild(content);
+function makeMessage(m){const wrapper=document.createElement('article');wrapper.className='message '+(m.role==='user'?'user':'assistant');if(m.role==='user'){const bubble=document.createElement('div');bubble.className='user-bubble';bubble.textContent=m.content||'';wrapper.appendChild(bubble);if(Array.isArray(m.attached)&&m.attached.length)wrapper.append(el('div','attachment-note',m.attached.map(item=>item.name+' · '+(item.kind==='image'?'image':'log')).join(' · ')));return wrapper}const header=document.createElement('div');header.className='assistant-head';const img=document.createElement('img');img.className='small-mark';img.src='/mark-clean.png';img.alt='';header.append(img,document.createTextNode('Takumi'));wrapper.appendChild(header);const content=document.createElement('div');content.className='message-body';content._codeValidation=m.code_validation||null;renderMarkdown(content,m.content||'');wrapper.appendChild(content);
+  if(typeof m.reasoning==='string'&&m.reasoning.trim()){const saved=document.createElement('details');saved.className='reasoning-live';const sum=document.createElement('summary');sum.textContent='Thought process';const note=document.createElement('p');note.className='reasoning-note';note.textContent='Text from the model. This is not the answer.';const pre=document.createElement('pre');pre.className='reasoning-text';pre.textContent=m.reasoning;saved.append(sum,note,pre);wrapper.insertBefore(saved,content);}
   if(m.evidence?.claims?.length)wrapper.append(evidencePanel(m.evidence));
   if(m.completion_verification)wrapper.append(completionPanel(m.completion_verification));
   if(m.code_repaired)wrapper.append(el('small','muted','Syntax errors corrected in one checked pass. Original draft retained below; runtime behavior remains unverified.'));
@@ -271,9 +314,9 @@ function savedActivity(runId){
   details.ontoggle=async()=>{if(!details.open||loaded)return;try{
     const result=await api('/api/runs/'+encodeURIComponent(runId)+'/activity');
     content.replaceChildren(el('p','muted','Run status: '+result.state));
-    for(const event of result.events){const p=event.payload,a=p.activity||{},row=el('div','saved-activity-row');if(p.type==='specialization')continue;const labels={accepted:'Run accepted',start:'Run started',first_token:'First answer received',metrics:'Generation measurements',model_used:'Model used',stop_requested:'Stop requested',stopped:'Stopped',cancelled:'Provider cancelled'};
+    for(const event of result.events){const p=event.payload,a=p.activity||{},row=el('div','saved-activity-row');if(p.type==='specialization')continue;const labels={diagnostic:'Technical diagnostic',error:'Run failed',accepted:'Run accepted',start:'Run started',first_token:'First answer received',metrics:'Generation measurements',model_used:'Model used',stop_requested:'Stop requested',stopped:'Stopped',cancelled:'Provider cancelled'};
       row.append(el('strong','',a.title||p.message||p.stage||labels[p.type]||'Activity update'));
-      if(p.type==='metrics')row.append(el('small','muted',p.tokens_per_second?`${p.tokens_per_second} tokens/sec · measured`:'No generation timing available'));if(p.type==='first_token')row.append(el('small','muted',`${Math.round(p.milliseconds)} ms`));if(a.detail||a.output)row.append(el('pre','', [a.detail,a.output].filter(Boolean).join('\n')));
+      if(p.type==='metrics')row.append(el('small','muted',p.tokens_per_second?`${p.tokens_per_second} tokens/sec · measured`:'No generation timing available'));if(p.type==='first_token')row.append(el('small','muted',`${Math.round(p.milliseconds)} ms`));if(a.detail||a.output||p.type==='diagnostic'&&p.text)row.append(el('pre','', [a.detail,a.output,p.type==='diagnostic'?p.text:''].filter(Boolean).join('\n')));
       content.append(row);
     }loaded=true;
   }catch(error){content.textContent=error.message}};
@@ -305,11 +348,25 @@ function showRunRecovery(session){
   }
 }
 
-function updateBusy(){const busy=state.busy;$('send').hidden=false;$('send').title=busy?'Queue instructions for the next step':'Send';$('stop').hidden=!busy;$('stop').disabled=state.stopRequested;$('stop').title=state.stopRequested?'Stopping; waiting for confirmation':'Stop this run';$('prompt').disabled=false;$('prompt').placeholder=busy?'Queue instructions for the next step…':(state.mode==='agent'?'Describe what you want built or repaired…':'Ask Takumi anything…');$('mode').disabled=busy;$('model').disabled=busy;statusBadge({ollama:!!state.model});$('sidebarState').textContent=busy?'Working locally':$('sidebarState').textContent}
+function updateBusy(){const busy=state.busy;$('send').hidden=false;$('send').title=busy?'Queue instructions for the next step':'Send';$('stop').hidden=!busy;$('stop').disabled=state.stopRequested;$('stop').title=state.stopRequested?'Stopping; waiting for confirmation':'Stop this run';$('prompt').disabled=false;$('prompt').placeholder=busy?'Queue instructions for the next step…':(state.mode==='agent'?'Describe what you want built or repaired…':'Ask Takumi anything…');$('mode').disabled=busy;$('model').disabled=busy;if($('modelMenu'))$('modelMenu').disabled=busy;if(busy)closeModelMenu();statusBadge({ollama:!!state.model});$('sidebarState').textContent=busy?'Working locally':$('sidebarState').textContent}
 function setMode(mode){state.mode=mode;$('mode').value=mode;if(mode==='agent'&&!state.project){toast('Choose a project for coding work.');openProjectDialog()}$('prompt').placeholder=mode==='agent'?'Describe what you want built or repaired…':'Ask Takumi anything…';}
+function renderPending(){
+  const tray=$('attachmentTray');if(!tray)return;
+  tray.replaceChildren();
+  tray.hidden=!state.pending.length;
+  for(const item of state.pending){
+    const chip=el('span','attachment-chip');
+    if(item.kind==='image'&&item.file){const img=document.createElement('img');img.alt='';img.src=URL.createObjectURL(item.file);chip.append(img)}
+    chip.append(document.createTextNode(item.name+' · '+(item.kind==='image'?(state.modelVision?'image':'image, pixels not sent'):'log')));
+    chip.append(button('Remove',()=>{state.pending=state.pending.filter(row=>row!==item);renderPending()}));
+    tray.append(chip);
+  }
+}
+function fileBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=()=>reject(reader.error||new Error('Could not read the file'));reader.readAsDataURL(file)})}
 async function send(resumeRun=null){
   if(!resumeRun?.id)resumeRun=null;
-  const prompt=$('prompt').value.trim();
+  const attached=resumeRun?[]:(state.pending||[]).slice();
+  const prompt=$('prompt').value.trim()||(attached.length?'Look at the attached evidence.':'');
   if(!prompt&&!resumeRun)return;
   if(!resumeRun&&!state.busy&&state.busySessions.length)return toast('Another local task is running. Open Kage to inspect or stop it; your message stays here.');
   if(state.busy){
@@ -323,29 +380,46 @@ async function send(resumeRun=null){
     }catch(e){toast(e.message)}
     return;
   }
-  if(!resumeRun&&!state.model){showView('models');return toast('Install Sumi 1.0 or Rei 1.0 from the Models page.')}
-  if(!resumeRun&&state.mode==='agent'&&!state.project){openProjectDialog();return}
+  if(!resumeRun&&!state.model){showView('models');return toast('Install Sumi 1.1 or Rei 1.1 from the Models page.')}
+  if(!resumeRun){
+    try{
+      const check=await api('/api/project/preflight',{prompt,mode:state.mode,project_id:state.project||null});
+      if(check.needs_project){state.projectDraft=prompt;openProjectDialog();toast('Choose the folder you want edited. Your request is saved.');return}
+    }catch(e){toast(e.message);return}
+  }
   if(!state.session){await newSession();if(!state.session)return}
   const sid=state.session;
   state.busy=true;state.runId=resumeRun?.id||null;state.stopRequested=false;state.stream='';state.events=[];state.tailFollow=true;
-  updateBusy();$('prompt').value='';
+  updateBusy();$('prompt').value='';if(!resumeRun){state.pending=[];renderPending()}
   $('welcome').hidden=true;$('messages').hidden=false;
   $('chatView').classList.add('has-messages');
   $('composerDock').appendChild($('composer'));$('composerDock').hidden=false;
-  const user=makeMessage({role:'user',content:prompt});
+  const user=makeMessage({role:'user',content:prompt,attached:attached.map(item=>({name:item.name,kind:item.kind}))});
+  if(!resumeRun&&attached.some(item=>item.kind==='image'&&item.file)){
+    const previews=document.createElement('div');previews.className='attachment-previews';
+    for(const item of attached.filter(row=>row.kind==='image'&&row.file)){const img=document.createElement('img');img.className='attachment-preview';img.alt=item.name;img.src=URL.createObjectURL(item.file);previews.append(img)}
+    user.append(previews);
+  }
   const response=makeMessage({role:'assistant',content:''});
   if(!resumeRun)$('messages').append(user);$('messages').append(response);
+  const reason=document.createElement('details');reason.className='reasoning-live';reason.open=false;reason.hidden=true;
+  const reasonSummary=document.createElement('summary');const reasonClock=document.createElement('span');reasonClock.className='reasoning-clock';reasonClock.textContent='0s';
+  reasonSummary.append('Thought process · ',reasonClock);
+  const reasonNote=document.createElement('p');reasonNote.className='reasoning-note';reasonNote.textContent='Text from the model. This is not the answer.';
+  const reasonPre=document.createElement('pre');reasonPre.className='reasoning-text';
+  reason.append(reasonSummary,reasonNote,reasonPre);response.append(reason);
+  let reasoningText='',reasoningCut=false;
   const body=response.querySelector('.message-body');
   const live=document.createElement('section');
   live.className='work-stream';live.setAttribute('aria-label','Live task activity');
-  live.innerHTML=`<button class="work-stream-heading" type="button" aria-expanded="true"><span class="work-stream-indicator"></span><b class="work-stream-title">Preparing your reply</b><span class="work-stream-clock">0s</span><span class="work-stream-chevron">⌄</span></button><div class="work-stream-body"><ol class="work-stream-list"></ol><div class="work-stream-note">Live steps and verification results.</div></div>`;
+  live.innerHTML=`<button class="work-stream-heading" type="button" aria-expanded="true"><span class="work-stream-indicator"></span><b class="work-stream-title">Thinking</b><span class="work-stream-clock">0s</span><span class="work-stream-chevron">⌄</span></button><div class="work-stream-body"><ol class="work-stream-list"></ol></div>`;
   response.append(live);
   live.hidden=state.settings.show_progress===false;
   const title=live.querySelector('.work-stream-title');title.setAttribute('role','status');title.setAttribute('aria-live','polite');const setTitle=value=>{if(title.textContent!==value)title.textContent=value};
   const list=live.querySelector('.work-stream-list');
   const clock=live.querySelector('.work-stream-clock');
   const wrap=live.querySelector('.work-stream-body');
-  const timeline=[];
+  const timeline=[];let droppedFrom='';
   let sources=[],began=performance.now()-(resumeRun?.created?Math.max(0,Date.now()-resumeRun.created*1000):0),done=false,recovered=false,reasoningNoted=false,codeReport=null;
   live.querySelector('.work-stream-heading').onclick=()=>{wrap.hidden=!wrap.hidden;live.querySelector('.work-stream-heading').setAttribute('aria-expanded',String(!wrap.hidden))};
   const elapsed=setInterval(()=>{if(!done)clock.textContent=Math.max(0,Math.round((performance.now()-began)/1000))+'s'},1000);
@@ -355,12 +429,16 @@ async function send(resumeRun=null){
     if(prev&&prev.label===label&&prev.detail===info)return;
     const row={stage,label,detail:info,url};timeline.push(row);
     if(timeline.length>48)timeline.shift();
+    const lastDone=list.lastElementChild?.querySelector('strong');if(lastDone)lastDone.textContent=finishedStep(lastDone.textContent);
     const li=el('li','work-stream-step'),dot=el('span','work-step-mark'),details=el('div','work-step-content');
+    // Details stay one tap away. Anything the person must act on stays visible.
+    if(stage==='recovery'||stage==='connection'||label==='Run failed')li.classList.add('open');
+    if(info||url)li.onclick=event=>{if(event.target.tagName!=='A')li.classList.toggle('open')};
     details.append(el('strong','',label));
     if(info)details.append(el('small','',info));
     if(url&&/^https?:\/\//i.test(url)){const a=el('a','work-step-link','Source');a.href=url;a.target='_blank';a.rel='noopener noreferrer';details.append(a)}
     li.append(dot,details);list.append(li);
-    while(list.children.length>7)list.firstElementChild.remove();
+    while(list.children.length>12)list.firstElementChild.remove();
     [...list.children].forEach((node,i)=>node.classList.toggle('is-current',i===list.children.length-1&&!done));
     clock.textContent=Math.round((performance.now()-began)/1000)+'s';
   }
@@ -370,14 +448,16 @@ async function send(resumeRun=null){
   try{
     const options={session_id:sid,prompt,mode:state.mode,model:state.model,reasoning:state.reasoning,
       effort:state.effort,speed:state.speed,autocontinue:true,
-      polish:state.settings.refine_reports===true,passes:state.settings.autonomy_passes||8,kage_member:state.kageMember||'ren'};
+      polish:state.settings.refine_reports===true,passes:state.settings.autonomy_passes||8,kage_member:state.kageMember||'ren',
+      attachments:attached.map(({kind,name,text,data})=>({kind,name,text,data}))};
     for await(const ev of TakumiRuns.subscribe(options,state.token,(connection,runId,detail)=>{
       if(runId)state.runId=runId;
-      if(connection==='reconnecting'){setTitle('Connection lost · reconnecting');add('connection','Reconnecting to the same run',detail||'Saved progress will be replayed.');}
+      if(connection==='reconnecting'&&!droppedFrom){droppedFrom=title.textContent;setTitle('Reconnecting to your PC')}
+      else if(connection==='connected'&&droppedFrom){setTitle(droppedFrom);droppedFrom=''}
     },resumeRun?.id)){
         state.runId=ev.run_id;
         switch(ev.type){
-          case 'start':window.kageSetState?.(ev.mode==='agent'?'coding':'thinking');setTitle(ev.mode==='agent'?'Working on project':'Preparing your reply');break;
+          case 'start':window.kageSetState?.(ev.mode==='agent'?'coding':'thinking');setTitle(ev.mode==='agent'?'Working':'Thinking');break;
           case 'progress':
             window.kageSetState?.(ev.stage==='research'?'researching':ev.stage==='verification'?'checking':'thinking');
             setTitle(ev.message||'Working');
@@ -385,28 +465,35 @@ async function send(resumeRun=null){
           case 'specialization':
             // Expertise is already provided to the model. Do not clutter chat with internal plumbing.
             break;
+          case 'reasoning':{
+            const chunk=typeof ev.text==='string'?ev.text:'';
+            if(!chunk)break;
+            reason.hidden=false;reasoningText+=chunk;
+            if(reasoningText.length>32000){reasoningText=reasoningText.slice(-32000);reasoningCut=true}
+            reasonPre.textContent=reasoningText+(reasoningCut?'\n[earlier reasoning omitted]':'');
+            if(typeof ev.elapsed_ms==='number')reasonClock.textContent=(ev.elapsed_ms/1000).toFixed(1)+'s';
+            setTitle('Thinking');break}
           case 'reasoning_activity':
-            setTitle('Analyzing evidence');
-            if(!reasoningNoted){add('analysis','Model processing','Native reasoning in progress; private deliberation is not displayed');reasoningNoted=true}break;
+            setTitle('Thinking');
+            if(!reasoningText){reason.hidden=false;reasonNote.textContent='The model signaled reasoning but did not send the text.';reasoningNoted=true}break;
           case 'sources':
             window.kageSetState?.('researching');sources=ev.sources||[];
             {
               const descriptors={live_leads:'Live source leads; content still needs verification',stale_cache:'Live search unavailable — old cached references, NOT current',local_only:'Local source matches only; external sources unavailable',unavailable:'No research leads available; answer from known material only'};
               const freshness=ev.freshness||'unavailable';
-              add('research',sources.length?`Found ${sources.length} reference leads`:'No sources available',descriptors[freshness]||'Research provider status unavailable');
-              for(const src of sources.slice(0,10))add('research',src.title,`${src.stale?'STALE · ':''}${src.source==='local-code'?'Local source · ':''}${src.snippet||''}`,src.url);
-              const errors=(ev.providers||[]).filter(x=>x.status==='unavailable'||x.status==='cooldown');
-              if(errors.length)add('research',`${errors.length} providers unavailable`,'Takumi used independent routes where possible.');
+              // One line, like every other finished action. The answer carries the source links.
+              const names=sources.slice(0,6).map(src=>`${src.stale?'Old: ':''}${src.title}`).join(' · ');
+              add('research',sources.length?`Checked ${sources.length} ${sources.length===1?'source':'sources'}`:'Found no sources',[descriptors[freshness]||'',names].filter(Boolean).join(' — '));
             }
             break;
-          case 'delta':window.kageSetState?.('writing');state.stream+=ev.text||'';dirty=true;setTitle(timeline.length?'Writing a response':'Responding');break;
-          case 'cycle':setTitle(ev.goal?`Goal step ${ev.index}`:`Coding pass ${ev.index} of ${ev.total}`);add('implementation',title.textContent,ev.goal?'Working within the original goal deadline':`Maximum ${ev.total} passes`);break;
+          case 'delta':window.kageSetState?.('writing');state.stream+=ev.text||'';dirty=true;setTitle('Writing');break;
+          case 'cycle':setTitle(ev.goal?`Goal step ${ev.index}`:'Working');if(ev.goal)add('implementation',title.textContent,'Working within the original goal deadline');else if(ev.index>1)add('implementation','Started another pass on the work',`Pass ${ev.index} of at most ${ev.total}`);break;
           case 'activity':
             window.kageSetState?.('coding');state.events.push(ev.activity);if(state.events.length>300)state.events.shift();
             add(ev.activity.kind==='error'?'verification':'implementation',ev.activity.title||'Tool activity',ev.activity.detail||ev.activity.status||'');break;
           case 'diagnostic':state.events.push({title:'Technical report',detail:ev.text,status:'notice'});add('verification','Technical diagnostic',ev.text);break;
-          case 'first_token':add('overview','First response received',`${Math.round(ev.milliseconds)} ms · measured locally`);break;
-          case 'metrics':metrics=ev;add('verification',ev.tokens_per_second?`${ev.tokens_per_second} tokens/sec measured`:'Generation complete',`${Math.round((performance.now()-began)/1000)} seconds elapsed${ev.time_to_first_token_ms!=null?' · first response '+ev.time_to_first_token_ms+' ms':''}`);break;
+          case 'first_token':break;
+          case 'metrics':metrics=ev;break;
           case 'notice':add('overview',ev.message||'Notice');break;
           case 'model_used':if(ev.fallback)add('overview','Model recovery',`Continued with installed model ${modelLabel(ev.model)}`);break;
           case 'code_validation':codeReport=ev.report;if(ev.report?.errors?.length)add('verification','Code review',ev.report.errors.length+' issues to inspect');else if(ev.report?.warnings?.length)add('verification','Partially verified',ev.report.warnings.join(' · '));else if(ev.report?.checked)add('verification','Syntax check','Syntax checks passed; build and runtime unverified');break;
@@ -422,7 +509,8 @@ async function send(resumeRun=null){
             {
               const selection=window.getSelection();
               const preserveSelection=selection&&!selection.isCollapsed&&response.contains(selection.anchorNode);
-              const finished=makeMessage({role:'assistant',content:state.stream,original:ev.original,status:ev.status,status_origin:ev.status_origin,refusal_origin:ev.refusal_origin,polished:ev.polished,metrics:ev.metrics,code_validation:ev.code_validation||codeReport,code_repaired:ev.code_repaired,evidence:ev.evidence,completion_verification:ev.completion_verification,sources,research_freshness:ev.research_freshness,research_note:ev.research_note,model_used:ev.model_used});
+              const finished=makeMessage({role:'assistant',content:state.stream,original:ev.original,status:ev.status,status_origin:ev.status_origin,refusal_origin:ev.refusal_origin,polished:ev.polished,metrics:ev.metrics,code_validation:ev.code_validation||codeReport,code_repaired:ev.code_repaired,evidence:ev.evidence,completion_verification:ev.completion_verification,sources,research_freshness:ev.research_freshness,research_note:ev.research_note,model_used:ev.model_used,reasoning:reasoningText});
+              if(!reason.hidden&&preserveSelection){reason.open=false;reasonClock.textContent=Math.max(0,Math.round((performance.now()-began)/1000))+'s'}
               if(timeline.length){setTitle(ev.run_state==='stopped'?'Stopped':ev.run_state==='blocked'?'Work blocked':'Activity');clock.textContent=timeline.length+' steps';live.classList.add('is-done');[...list.children].forEach(n=>n.classList.remove('is-current'));wrap.hidden=true;if(!preserveSelection)finished.append(live);}
               if(preserveSelection){if(dirty)render();}
               else {response.replaceWith(finished);const code=finished.querySelector('.message-body');if(codeByBody.get(code)?.length&&window.innerWidth>=1150)openCodeFromBody(code,0);}
@@ -453,7 +541,7 @@ function renderContent(){
   const view=state.view,heading=$('contentHeading'),body=$('contentBody');
   const titles={
     projects:['Projects','Choose a real checkout to investigate, edit, build and verify.'],
-    models:['Models','Sumi 1.0, Rei 1.0, and other installed models.'],
+    models:['Models','Sumi 1.1, Rei 1.1, and other installed models.'],
     knowledge:['Knowledge','Sumi’s engineering playbooks, reference sources, and reviewed lessons.'],
     research:['Research','Find live source references, implementation examples, and local code matches.'],
     plugins:['Plugins','Connect tools to your workspace. Changes and deployments require explicit project scope.']
@@ -476,9 +564,9 @@ async function showProjectDetail(id){state.project=id;const p=selectedProject();
 function renderModelsPanel(root){
   const ready=!!state.sumi?.installed, lite=!!(state.sumi?.installed_rei||state.sumi?.installed_lite);
   const lightweightSelected=lite&&(!ready||/^rei-1\.0|^sumi-1\.0-lite/.test(state.model));
-  const feature=el('div','card sumi-hero');feature.append(el('span','eyebrow','TAKUMI INTELLIGENCE'),el('h2','',lightweightSelected?'Rei 1.0':'Sumi 1.0'));
+  const feature=el('div','card sumi-hero');feature.append(el('span','eyebrow','TAKUMI INTELLIGENCE'),el('h2','',lightweightSelected?'Rei 1.1':'Sumi 1.1'));
   feature.append(el('p','',lightweightSelected?'A lighter local engineering model for 8 GB GPUs, with smaller context and memory budgets.':'Your local engineering model for emulator design, graphics, JITs, decompilation, and tested coding workflows.'));
-  feature.append(el('span','pill',ready?'Ready on this PC':lite?'Rei 1.0 ready':'Setup required'));
+  feature.append(el('span','pill',ready?'Ready on this PC':lite?'Rei 1.1 ready':'Setup required'));
   if(!ready && !lite){
     feature.append(el('p','muted',state.sumi?.base_installed?
       'The model weights are already present. Finish setting up Sumi below.':
@@ -486,14 +574,14 @@ function renderModelsPanel(root){
     if(state.remote){feature.append(el('p','muted','Model installation is available only from the Windows desktop. Open Takumi on your PC to complete setup.'));}
     else{
       const actions=el('div','form-row');
-      const install=button('Set up Sumi 1.0',async()=>{
-        if(!confirm('Set up Sumi 1.0 on this Windows PC? The first run downloads roughly 8.3 GB of model weights plus official local tools. This uses disk space and internet data, but no paid model API.'))return;
+      const install=button('Set up Sumi 1.1',async()=>{
+        if(!confirm('Set up Sumi 1.1 on this Windows PC? The first run downloads roughly 8.3 GB of model weights plus official local tools. This uses disk space and internet data, but no paid model API.'))return;
         install.disabled=true;
         try{await api('/api/setup/start',{lightweight:false,skip_coding_agent:false});toast('Setting up Sumi. You can follow the progress below.');watchSetup(progress,install)}
         catch(e){install.disabled=false;toast(e.message,12000)}
       },'action-btn');
       const small=button('Use a lighter model',async()=>{
-        if(!confirm('Install the smaller Rei 1.0 profile instead? It uses a smaller 9B base and will not have the same capability as the recommended Sumi 1.0.'))return;
+        if(!confirm('Install the smaller Rei 1.1 profile instead? It uses a smaller 9B base and will not have the same capability as the recommended Sumi 1.1.'))return;
         small.disabled=true;
         try{await api('/api/setup/start',{lightweight:true,skip_coding_agent:false});watchSetup(progress,small)}
         catch(e){small.disabled=false;toast(e.message,12000)}
@@ -504,9 +592,8 @@ function renderModelsPanel(root){
     }
   }else{
     const name=ready?'sumi-1.0':(state.sumi?.installed_rei?'rei-1.0':'sumi-1.0-lite');
-    feature.append(button('Use '+(ready?'Sumi 1.0':'Rei 1.0'),()=>{
-      state.model=state.models.find(m=>m===name||m.startsWith(name+':'))||state.model;
-      $('model').value=state.model;rememberModelChoice();refreshNativeLevels();showView('chats');
+    feature.append(button('Use '+(ready?'Sumi 1.1':'Rei 1.1'),()=>{
+      chooseModel(state.models.find(m=>m===name||m.startsWith(name+':'))||state.model);showView('chats');
     },'action-btn'));
   }
   root.append(feature);
@@ -514,14 +601,44 @@ function renderModelsPanel(root){
   root.append(button('Refresh model status',async()=>{await refreshBootstrap();renderContent()}));
   const grid=el('div','cards');
   for(const id of state.models){
-    const card=el('div','card');card.append(el('h3','',modelLabel(id)),el('p','','Available locally on this computer.'));
+    const row=modelRecord(id);const card=el('div','card');card.append(el('h3','',row.label),el('p','',row.note||'Installed on this PC.'));
     if(id===state.model)card.append(el('span','pill','Selected'));
-    card.append(button('Select',()=>{state.model=id;$('model').value=id;rememberModelChoice();refreshNativeLevels();showView('chats')}));grid.append(card)
+    card.append(button('Select',()=>{chooseModel(id);showView('chats')}));grid.append(card)
   }
   root.append(grid);
   if(!state.models.length)root.append(el('p','muted','No local model is ready. Complete setup above; model downloads can be resumed if interrupted.'));
-  const info=el('p','muted','Sumi 1.0 is an engineering-specialized profile derived from separately downloaded upstream weights, not independently trained weights. Source attribution is available in the release documentation.');
+  section(root,'Add a local model');
+  root.append(el('p','muted','One click downloads a model from the local registry onto this PC. Sumi 1.1 and Rei 1.1 stay the Takumi profiles. Cline can use the same installed model when it is pointed at Ollama on this computer.'));
+  const library=el('div','cards');
+  for(const item of state.library||[]){
+    const card=el('div','card');
+    card.append(el('h3','',item.label),el('p','',item.note),el('p','',item.fit));
+    if(item.installed)card.append(el('span','pill','Installed'));
+    else card.append(button('Install',()=>installLibraryModel(item),'action-btn'));
+    library.append(card);
+  }
+  root.append(library);
+  section(root,'Cline');
+  const cline=el('div','card');
+  cline.append(el('h3','','Cline command'),el('p','','Cline is a separate coding app. Installing it does not replace OpenCode, and Takumi Work mode still uses OpenCode with Sumi or Rei.'));
+  if(state.clineInstalled)cline.append(el('span','pill','Installed'),el('p','muted','Run cline auth and choose Ollama at http://127.0.0.1:11434 to use a model installed here.'));
+  else cline.append(button('Install Cline',installCline,'action-btn'),el('p','muted','Requires Node.js npm. After install, run cline auth and choose Ollama. No API key is stored by this button.'));
+  root.append(cline);
+  const progress=el('pre','setup-progress','');progress.id='libraryProgress';progress.hidden=true;root.append(progress);
+  const info=el('p','muted','Sumi 1.1 is an engineering-specialized profile derived from separately downloaded upstream weights, not independently trained weights. Source attribution is available in the release documentation.');
   info.style.marginTop='24px';root.append(info);
+}
+async function installLibraryModel(item){
+  if(!confirm(`Download ${item.label} (${item.id})?\n\n${item.fit}. ${item.note}\n\nThis uses disk space and internet data. It does not replace Sumi 1.1 or Rei 1.1. Cline can select it if Cline uses Ollama on this PC.`))return;
+  const progress=$('libraryProgress');if(progress){progress.hidden=false;progress.textContent='Starting download…'}
+  try{await api('/api/models/install',{tag:item.id});if(progress)watchSetup(progress)}
+  catch(e){toast(e.message,12000)}
+}
+async function installCline(){
+  if(!confirm('Install the Cline command from the official npm package?\n\nCline is separate from Takumi. Work mode still uses OpenCode. After install, run cline auth and choose Ollama at http://127.0.0.1:11434. This button does not save an API key.'))return;
+  const progress=$('libraryProgress');if(progress){progress.hidden=false;progress.textContent='Starting Cline install…'}
+  try{await api('/api/tools/cline/install',{});if(progress)watchSetup(progress)}
+  catch(e){toast(e.message,12000)}
 }
 async function watchSetup(target,buttonNode){
   const alive=()=>document.body.contains(target);
@@ -529,7 +646,7 @@ async function watchSetup(target,buttonNode){
   try{status=await api('/api/setup/status')}catch(err){if(alive())target.textContent='Setup status unavailable: '+err.message;return}
   if(!alive())return;
   const latest=status.messages||[];
-  target.textContent=(status.running?'Installing…':status.state==='ready'?'Sumi is ready.':status.state==='failed'?'Setup needs attention.':'')+'\n'+latest.slice(-13).join('\n');
+  target.textContent=(status.running?'Installing…':status.state==='ready'?'Install finished.':status.state==='failed'?'Setup needs attention.':'')+'\n'+latest.slice(-13).join('\n');
   target.scrollTop=target.scrollHeight;
   if(status.running){setTimeout(()=>watchSetup(target,buttonNode),1500);return}
   if(buttonNode)buttonNode.disabled=false;
@@ -581,20 +698,23 @@ function focusPrompt(text=''){
 }
 async function drawTools(){
   const root=$('drawerBody');root.replaceChildren();
-  root.append(button('Sumi trainer',()=>openDrawer('training'),'action-btn'),button('Connect iPhone',()=>openDrawer('remote'),'action-btn'));
+  root.append(button('Verified build',()=>openDrawer('vibe'),'action-btn'),button('Sumi trainer',()=>openDrawer('training'),'action-btn'),button('Connect iPhone',()=>openDrawer('remote'),'action-btn'));
   root.append(el('p','muted','Research, source exploration and coding tools are available from the same conversation. Select a project for file edits and tests.'));
   section(root,'Active project');
   const project=selectedProject();
   const projectCard=el('div','card tools-card');
   projectCard.append(el('strong','',project?.name||'No project selected'),el('p','muted',project?'Your current source checkout is available to Work mode.':'Chat works without a project. Choose one when you want Takumi to edit or test actual code.'));
   projectCard.append(button(project?'Change project':'Choose project',openProjectDialog,'action-btn'));
+  projectCard.append(button('Edit project files',()=>{setMode('agent');closeDrawer();$('prompt').focus()}));
+  if(project)projectCard.append(button('Add changes to GitHub',reviewGitHubPush));
   root.append(projectCard);
+  root.append(el('p','muted','To add a GitHub repository link to your website, choose the website folder and describe where it belongs. Takumi edits that project. Add changes to GitHub pushes an already committed feature branch through your existing Git login.'));
   section(root,'Research & code');
   const input=el('input','inline-input');input.placeholder='What should Takumi investigate?';input.style.width='100%';
   const go=button('Research in chat',()=>{if(!input.value.trim())return toast('Enter a research question');focusPrompt('Research and cite current sources: '+input.value.trim())},'action-btn');
   root.append(input,go,el('p','muted','Takumi researches automatically when useful. External search providers receive a short, scrubbed query—not your project files.'));
   section(root,'Connections');
-  root.append(button('Engineering workbench',()=>openDrawer('engineering'),'text-btn'),button('GitHub and Figma',()=>openDrawer('connections'),'text-btn'),button('Build and test harness',()=>openDrawer('harness'),'text-btn'),button('Manage Discord bot',()=>openDrawer('bots'),'text-btn'),button('iPhone access',()=>openDrawer('remote'),'text-btn'));
+  root.append(button('Engineering workbench',()=>openDrawer('engineering'),'text-btn'),button('GitHub and Figma',()=>openDrawer('connections'),'text-btn'),button('PC controls',()=>openDrawer('host'),'action-btn'),button('Build and test harness',()=>openDrawer('harness'),'text-btn'),button('Manage Discord bot',()=>openDrawer('bots'),'text-btn'),button('iPhone access',()=>openDrawer('remote'),'text-btn'));
   section(root,'Free research options');
   const status=el('div','card');root.append(status);
   try{const keys=await api('/api/research/providers');status.append(el('p','',keys.tavily?'Free web search key connected':'No dedicated search key yet · public fallbacks are active'));
@@ -630,11 +750,12 @@ async function drawProfile(){
   root.append(button('Import Windows profile',()=>upload.click(),'action-btn'),upload);
   root.append(button('Export this profile',async()=>{try{const data=await api('/api/profile/export');const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=el('a');a.href=url;a.download='takumi-profile.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000)}catch(e){toast(e.message)}},'text-btn'));
 }
-function openDrawer(kind){const box=$('drawer');box.hidden=false;box.dataset.kind=kind;const title={tools:'Tools & connections',profile:'Your profile',harness:'Test harness',settings:'Settings',companion:'Your companion',activity:'Activity',connections:'Connections',project:'Project details',processes:'Running applications',bots:'Discord bot',remote:'iPhone access',training:'Sumi trainer',engineering:'Engineering tools'};const k={tools:'WORKSPACE',profile:'TAKUMI ACCOUNT',harness:'VERIFICATION',settings:'TAKUMI',companion:'COMPANION',activity:'WORKSPACE',connections:'INTEGRATIONS',project:'LOCAL PROJECT',processes:'WINDOWS',bots:'AUTOMATION',remote:'PRIVATE ACCESS',engineering:'EVIDENCE WORKBENCH'};$('drawerTitle').textContent=title[kind]||'Workspace';$('drawerKicker').textContent=k[kind]||'TAKUMI';$('drawerBody').replaceChildren();switch(kind){case 'training':return drawTraining();case 'engineering':return drawEngineering();case 'tools':return drawTools();case 'profile':return drawProfile();case 'harness':return drawHarness();case 'settings':return drawSettings();case 'companion':return drawCompanion();case 'activity':return drawActivity();case 'connections':return drawConnections();case 'processes':return drawProcesses();case 'bots':return drawBots();case 'remote':return drawRemote();case 'project':return;}}
+function openDrawer(kind){const box=$('drawer');box.hidden=false;box.dataset.kind=kind;const title={tools:'Tools & connections',profile:'Your profile',harness:'Test harness',host:'PC controls',settings:'Settings',companion:'Your companion',activity:'Activity',connections:'Connections',project:'Project details',processes:'Running applications',bots:'Discord bot',remote:'iPhone access',training:'Sumi trainer',vibe:'Verified build',engineering:'Engineering tools'};const k={tools:'WORKSPACE',profile:'TAKUMI ACCOUNT',harness:'VERIFICATION',host:'WINDOWS HOST',settings:'TAKUMI',companion:'COMPANION',activity:'WORKSPACE',connections:'INTEGRATIONS',project:'LOCAL PROJECT',processes:'WINDOWS',bots:'AUTOMATION',remote:'PRIVATE ACCESS',vibe:'SUMI',engineering:'EVIDENCE WORKBENCH'};$('drawerTitle').textContent=title[kind]||'Workspace';$('drawerKicker').textContent=k[kind]||'TAKUMI';$('drawerBody').replaceChildren();switch(kind){case 'training':return drawTraining();case 'vibe':return window.drawVibe();case 'engineering':return drawEngineering();case 'tools':return drawTools();case 'profile':return drawProfile();case 'harness':return drawHarness();case 'host':return drawHostControls();case 'settings':return drawSettings();case 'companion':return drawCompanion();case 'activity':return drawActivity();case 'connections':return drawConnections();case 'processes':return drawProcesses();case 'bots':return drawBots();case 'remote':return drawRemote();case 'project':return;}}
 function closeDrawer(){$('drawer').hidden=true}
 function legacyDrawSettings(){const root=$('drawerBody');root.append(el('p','','The appearance and personality are yours to customize. Model infrastructure remains behind the scenes.'));section(root,'Appearance');const grid=el('div','theme-grid');const samples={porcelain:['#f1f0ec','#fbfaf8'],sumi:['#181d21','#1f2326'],sakura:['#f6ecee','#fffaf8'],matcha:['#eaf0e4','#f8f9f2'],indigo:['#eaeaf3','#f8f8fc'],midnight:['#121722','#161a24']};for(const [name,palette] of Object.entries(samples)){const b=button(name[0].toUpperCase()+name.slice(1),async()=>{await persistSettings({theme:name});drawSettings()},'theme-option'+((state.settings.theme||'porcelain')===name?' selected':''));const swatch=el('span','theme-swatch');swatch.style.setProperty('--sample-side',palette[0]);swatch.style.setProperty('--sample-main',palette[1]);b.prepend(swatch);grid.append(b)}root.append(grid);section(root,'Personality');const select=el('select','inline-input');for(const name of ['precise','friendly','technical','concise'])select.add(new Option(name[0].toUpperCase()+name.slice(1),name));select.value=state.settings.personality||'precise';select.onchange=()=>persistSettings({personality:select.value});root.append(select);section(root,'Responses');const refine=el('label','toggle-setting');const check=el('input');check.type='checkbox';check.checked=state.settings.refine_reports!==false;check.onchange=async()=>{await persistSettings({refine_reports:check.checked});toast(check.checked?'Final coding reports are refined locally in Standard speed.':'Extra local rewriting is disabled.')};refine.append(check,el('span','','Refine final coding reports with a second local pass'));root.append(refine,el('p','muted','Improves clarity without claiming unverified results. Boost skips the extra pass to protect response speed.'));section(root,'Reasoning');root.append(el('p','',`Active workflow depth: ${state.effort}. Adjust it in the message composer.`));const native=el('select','inline-input');for(const level of state.nativeLevels){native.add(new Option(level==='default'?'Automatic native reasoning':String(level).toUpperCase(),String(level)))}native.value=String(state.reasoning);native.onchange=()=>{state.reasoning=native.value;toast('Native reasoning preference updated')};root.append(native);root.append(el('p','',`These native thinking controls apply to Chat. Coding tasks use the model's verified provider defaults, plus the selected work depth and regression checks.`));section(root,'Integrations & devices');root.append(button('Private iPhone access',()=>openDrawer('remote')),button('GitHub and Figma',()=>openDrawer('connections')),button('Discord bot',()=>openDrawer('bots')));section(root,'Autonomous coding');root.append(el('p','', 'Takumi works across successive verified passes until the objective is complete, blocked, stopped, or reaches your safety limit.'));const loops=el('select','inline-input');for(const n of [4,8,12])loops.add(new Option(`${n} passes maximum`,String(n)));loops.value=String(state.settings.autonomy_passes||8);loops.onchange=()=>persistSettings({autonomy_passes:Number(loops.value)});root.append(loops);section(root,'Advanced');root.append(el('p','',`Autonomous work uses explicit project boundaries and a Stop control. Protect your source with commits and backups before large changes.`));}
 async function persistSettings(partial){try{const r=await api('/api/settings',partial);state.settings=r.settings;document.body.dataset.theme=state.settings.theme||'porcelain';localStorage.setItem('takumi-theme',document.body.dataset.theme);syncDesktopChrome();refreshResearchSwitch()}catch(e){toast(e.message)}}
 async function drawCompanion(){if(window.drawKage)return window.drawKage();const root=$('drawerBody');const badge=el('div','card');badge.append(el('h3','','Takumi is here'),el('p','','Your companion watches registered projects for changes without consuming GPU inference while idle. It can keep project notes and report activity when you return.'));root.append(badge);section(root,'Project activity');try{const r=await api('/api/companion');for(const a of (r.events||[]).slice(0,18)){const row=el('div','list-row');row.append(el('strong','',a.text),el('small','muted',new Date(a.time*1000).toLocaleString()));root.append(row)}if(!r.events?.length)root.append(el('p','muted','Everything is quiet. Add a project to begin watching changes.'))}catch(e){root.append(el('p','muted',e.message))}section(root,'Automations');root.append(button('Manage Discord bot',()=>openDrawer('bots')),button('View agent activity',()=>openDrawer('activity')))}
+window.noteEngineering=function(event){if(!event?.name)return;const key=event.name+'|'+event.title+'|'+(event.time||'');if(window.noteEngineering.seen?.has(key))return;(window.noteEngineering.seen||=new Set()).add(key);state.events.push({title:event.title,status:event.name,detail:event.detail||''});if(state.events.length>300)state.events.shift();const msgs=$('messages');if(!msgs||msgs.hidden)return;const row=el('div','saved-activity-row');row.append(el('strong','',event.title),el('small','muted',event.name));msgs.append(row);scrollThread()};
 function drawActivity(){const root=$('drawerBody');root.append(el('p','',state.busy?'Takumi is actively working. Tool results appear as the coding agent reports them.':'Recent execution evidence from this conversation.'));const list=el('ol','drawer-events');for(const ev of state.events.slice(-80).reverse()){const li=el('li');li.append(el('b','',ev.title||'Activity'),el('small','',`${ev.status||'Recorded'}${ev.tool?' · '+ev.tool:''}`));if(ev.detail||ev.output){const det=el('details'),sum=el('summary','', 'Technical evidence'),pre=el('pre','',[ev.detail,ev.output].filter(Boolean).join('\n\n'));det.append(sum,pre);li.append(det)}list.append(li)}if(!state.events.length)root.append(el('p','muted','No agent actions in this conversation yet.'));root.append(list)}
 async function drawConnections(){const root=$('drawerBody');root.append(el('p','','Takumi uses the GitHub and Figma accounts already authenticated on this computer. It does not copy credentials into your chats.'));try{const c=await api('/api/connections');for(const [key,name] of [['github','GitHub'],['figma','Figma']]){const x=c[key]||{};const card=el('div','card');card.style.marginBottom='12px';card.append(el('h3','',name),el('p','',x.connected?'Connected':(x.status||'Not connected')));if(x.repository)card.append(el('span','code-inline',x.repository));root.append(card)}}catch(e){root.append(el('p','',e.message))}root.append(button('Sign in to GitHub',async()=>{try{const r=await api('/api/connections/sign-in',{provider:'github'});toast(r.message||'Continue sign-in in the new Windows window.')}catch(e){toast(e.message)}},'action-btn'));root.append(button('Sign in to Figma',async()=>{try{await persistSettings({figma_enabled:true});const r=await api('/api/connections/sign-in',{provider:'figma',model:state.model});toast(r.message||'Complete Figma sign-in in the Windows sign-in window.')}catch(e){toast(e.message)}},'action-btn'));root.append(button('Enable Figma for coding tasks',async()=>{try{await persistSettings({figma_enabled:true});toast('Figma integration enabled for new agent runs. Complete your Figma sign-in when prompted.')}catch(e){toast(e.message)}},'action-btn'));root.append(el('p','','Figma access requires an authenticated MCP connection. GitHub access uses your existing GitHub authorization.'))}
 async function drawProcesses(){const root=$('drawerBody');root.append(el('p','','Only applications explicitly launched by Takumi can be stopped here.'));try{const result=await api('/api/processes');for(const p of result.processes||[]){const row=el('div','list-row');row.append(el('strong','',`${p.name} · PID ${p.pid}`));row.append(button('Stop',async()=>{await api('/api/process/stop',{process_id:p.id});drawProcesses()}));root.append(row)}if(!result.processes?.length)root.append(el('p','muted','No Takumi-managed applications are running.'))}catch(e){root.append(el('p','muted',e.message))}}
@@ -661,13 +782,29 @@ async function drawTraining(){
  const refresh=async()=>{try{const r=await api('/api/training');current=r;const selection=saved.value;saved.replaceChildren();for(const item of r.checkpoints||[]){const option=el('option','',`${item.steps} steps · ${item.id.slice(0,8)}`);option.value=item.id;saved.append(option)}if([...saved.options].some(o=>o.value===selection))saved.value=selection;summary.replaceChildren(el('p','',r.configured?'Training environment configured.':'Configure the local training environment below.'));if(r.job){summary.append(el('p','',`${r.job.mode}: ${r.job.status}`),el('p','',`Saved optimizer steps: ${r.job.progress?.optimizer_steps??r.job.result?.optimizer_steps??0}`));if(r.job.error)summary.append(el('p','',r.job.error));log.textContent=r.job.log||'Checking model identity…';}return r;}catch(e){summary.textContent=e.message;}};
  const initial=await refresh();if(!initial)return;
  const start=async(mode,steps=2)=>{try{await api('/api/training/start',{mode,steps,checkpoint_id:saved.value});await refresh()}catch(e){toast(e.message)}};
- const actions=el('div','form-row');actions.append(button('Check model',()=>start('forward'),'action-btn'),button('Check learning · 64 steps',()=>start('smoke',64),'action-btn'),button('Coding pilot · 64 steps',()=>start('pilot',64),'action-btn'),button('Verify saved adapter',()=>start('reload')),button('Stop training',async()=>{try{await api('/api/training/stop',{});await refresh()}catch(e){toast(e.message)}}));root.append(actions,saved,el('p','muted','Training reserves the GPU and unloads idle inference models. It requires 12 GiB free RAM to start and stops below 2 GiB. The learning check uses two artificial associations. The coding pilot uses eight verified examples and compares four held-out tasks. Both save experimental adapters without changing your active model. The pilot is limited to 30 minutes.'),log);
+ const actions=el('div','form-row');actions.append(button('Check model',()=>start('forward'),'action-btn'),button('Check learning · 64 steps',()=>start('smoke',64),'action-btn'),button('Coding pilot · 64 steps',()=>start('pilot',64),'action-btn'),button('Specialist pilot · 64 steps',()=>start('specialist',64),'action-btn'),button('Coding tasks · 64 steps',()=>start('vibe',64),'action-btn'),button('Continue saved run · 32 steps',()=>start('continue',32),'action-btn'),button('Verify saved adapter',()=>start('reload')),button('Stop training',async()=>{try{await api('/api/training/stop',{});await refresh()}catch(e){toast(e.message)}}));root.append(actions,saved,el('p','muted','Training reserves the GPU and unloads idle inference models. It requires 12 GiB free RAM to start and stops below 2 GiB. The learning check uses two artificial associations. The coding pilot uses eight verified examples and compares four held-out tasks. Both save experimental adapters without changing your active model. The specialist pilot adds address, instruction and binary-layout kernels: 16 training examples and six separate evaluation tasks. Each pilot is limited to 30 minutes; no adapter is activated automatically.'),log);
  const settings=el('details',''),heading=el('summary','','Training environment');settings.append(heading);const inputs={};
  for(const [key,label] of [['python','WSL training Python'],['gguf','Exact Sumi weight file'],['gguf_python','GGUF reader folder'],['tokenizer','Exact tokenizer folder']]){const input=el('input','inline-input');input.value=initial.config?.[key]||'';input.style.width='100%';input.setAttribute('aria-label',label);settings.append(el('label','',label),input);inputs[key]=input;}
  settings.append(button('Save environment',async()=>{try{await api('/api/training/configure',Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])));await refresh();toast('Training environment saved.')}catch(e){toast(e.message)}}));root.append(settings);
  const poll=setInterval(()=>{if($('drawer').hidden||$('drawer').dataset.kind!=='training'){clearInterval(poll);return;}refresh()},2000);
 }
 
+async function useSelectedProject(project){
+  const draft=state.projectDraft??$('prompt').value;
+  state.project=project.id;$('projectDialog').close();
+  await refreshBootstrap();await newSession(project.id);
+  $('prompt').value=draft;delete state.projectDraft;$('prompt').focus();
+}
+async function reviewGitHubPush(){
+  if(!state.project){openProjectDialog();return}
+  try{
+    const r=await api('/api/plugins/prepare',{plugin:'github',action:'push',project_id:state.project,arguments:{}});
+    if(confirm(r.title+'\n\n'+r.command_preview+'\n\nPush these committed changes?')){
+      const done=await api('/api/plugins/execute',{approval_id:r.approval_id});
+      toast(done.ok?'Branch pushed successfully':'Push failed: '+(done.output||done.error));
+    }
+  }catch(e){toast(e.message)}
+}
 function openProjectDialog(){if(!$('projectDialog').open){$('projectDialog').showModal();$('projectPath').focus()}}
 function openMobile(){$('sidebar').classList.add('mobile-open');$('mobileScrim').classList.add('visible');$('mobileScrim').hidden=false}
 function closeMobile(){$('sidebar').classList.remove('mobile-open');$('mobileScrim').classList.remove('visible');$('mobileScrim').hidden=true}
@@ -788,6 +925,37 @@ async function renderPluginsPanel(root){
     }
   }catch(e){grid.append(el('p','muted','Plugin status is unavailable: '+e.message))}
 }
+async function drawHostControls(){
+  const root=$('drawerBody');root.replaceChildren();
+  root.append(el('p','muted','Run fixed, read-only checks on the Windows PC hosting Takumi. Your iPhone never executes Windows commands. These checks do not alter your running app, Git branches, or releases.'));
+  const results=el('div','card');results.append(el('p','muted','No PC diagnostics have been run from this device.'));root.append(results);
+  const check=button('Check PowerShell & GitHub on my PC',async()=>{
+    check.disabled=true;results.replaceChildren(el('p','','Checking your connected PC…'));
+    try{
+      const response=await api('/api/host/readiness');
+      results.replaceChildren(el('h3','',response.host+' · '+response.executed_on));
+      for(const [name,row] of Object.entries(response.checks||{})){
+        const label=name.replaceAll('_',' ');
+        const entry=el('div','list-row');
+        entry.append(el('strong','',label+' · '+row.status),el('pre','raw-panel',row.detail||('Exit '+String(row.exit_code??'unavailable'))));
+        results.append(entry);
+      }
+      if(response.github_release_published)results.append(el('p','', 'Release was published.'));
+      else results.append(el('p','muted','No GitHub release was published and your running Takumi was not replaced.'));
+    }catch(error){results.replaceChildren(el('p','muted','PC diagnostic unavailable: '+error.message))}
+    finally{check.disabled=false}
+  },'action-btn');
+  root.insertBefore(check,results);
+  root.append(button('Build and test project',()=>openDrawer('harness')));
+  root.append(button('Use local coding agent (Work)',()=>{
+    if(!state.project){openProjectDialog();toast('Select a registered project first.');return;}
+    setMode('agent');closeDrawer();showView('chats');
+    $('prompt').value='Diagnose Windows PowerShell and GitHub tools on this PC, then inspect this project. Report actual command outputs. Do not push, publish, stop or replace my running Takumi.';
+    $('prompt').focus();
+  }));
+  root.append(el('p','muted','Building and GitHub pushes require an existing registered project. Public releases and native installation still require independent validation and explicit approval.'));
+}
+
 async function drawHarness(){
   const root=$('drawerBody');root.append(el('p','','Tasks must be declared in takumi.tasks.json inside your project. Takumi records real output and never labels a failed test as passing.'));
   if(!state.project){root.append(button('Choose project',openProjectDialog));return}
@@ -846,80 +1014,88 @@ async function drawUpdates(){
     const prepare=button('Download verified update',async()=>{prepare.disabled=true;try{const r=await api('/api/update/prepare',{});toast(r.message,10000);const apply=button('Install when I close Takumi',async()=>{if(!confirm('Install verified Takumi '+result.version+' after closing the app?'))return;try{const done=await api('/api/update/apply',{confirmed:true});toast(done.message,12000)}catch(e){toast(e.message)}},'action-btn');status.append(apply)}catch(e){toast(e.message,12000)}finally{prepare.disabled=false}},'action-btn');status.append(prepare);
   }catch(e){status.textContent='Release check failed: '+e.message}
 }
-const TAKUMI_THEMES={sage:['#d8e2d3','#eef2e9'],porcelain:['#f1f0ec','#fbfaf8'],sumi:['#181d21','#1f2326'],sakura:['#f6ecee','#fffaf8'],matcha:['#eaf0e4','#f8f9f2'],indigo:['#eaeaf3','#f8f8fc'],midnight:['#121722','#161a24'],washi:['#f3eee4','#fffdf7'],kintsugi:['#1b2529','#243038'],ume:['#f1e1e5','#fff7f8'],yoru:['#131c29','#182235'],kyoto:['#ede4d7','#faf4e9'],moss:['#26382f','#324537'],sora:['#d9eaf0','#f3faff'],akane:['#f3dfd4','#fff8f0'],zen:['#e8e6df','#f8f7f3'],beni:['#24171c','#2e1d24'],shinku:['#1d1517','#251a1d'],shu:['#f4e1da','#fff9f5'],botan:['#eee1ed','#fcf7fc'],tsuki:['#181c22','#232830'],ruri:['#152238','#1e2e47']};
+// A step reads as work in progress while it runs and as a finished action afterwards.
+const FINISHED_WORDS={Inspecting:'Inspected',Checking:'Checked',Reading:'Read',Running:'Ran',Writing:'Wrote',Building:'Built',Finding:'Found',Searching:'Searched',Editing:'Edited',Testing:'Tested',Reviewing:'Reviewed',Fetching:'Fetched',Verifying:'Verified',Looking:'Looked',Planning:'Planned',Refining:'Refined',Repairing:'Repaired',Correcting:'Corrected',Diagnosing:'Diagnosed',Preparing:'Prepared',Starting:'Started',Trying:'Tried',Loading:'Loaded',Applying:'Applied'};
+function finishedStep(text){const value=String(text||'');const first=value.split(' ',1)[0];return FINISHED_WORDS[first]?FINISHED_WORDS[first]+value.slice(first.length):value}
+const TAKUMI_THEMES={sage:['#d8e2d3','#eef2e9'],porcelain:['#f1f0ec','#fbfaf8'],sumi:['#181d21','#1f2326'],sakura:['#f6ecee','#fffaf8'],matcha:['#eaf0e4','#f8f9f2'],indigo:['#eaeaf3','#f8f8fc'],midnight:['#121722','#161a24'],washi:['#f3eee4','#fffdf7'],kintsugi:['#1b2529','#243038'],ume:['#f1e1e5','#fff7f8'],yoru:['#131c29','#182235'],kyoto:['#ede4d7','#faf4e9'],moss:['#26382f','#324537'],sora:['#d9eaf0','#f3faff'],akane:['#f3dfd4','#fff8f0'],zen:['#e8e6df','#f8f7f3'],beni:['#24171c','#2e1d24'],shinku:['#1d1517','#251a1d'],shu:['#f4e1da','#fff9f5'],botan:['#eee1ed','#fcf7fc'],tsuki:['#181c22','#232830'],ruri:['#152238','#1e2e47'],asagi:['#d5ebe8','#f4fbfa'],fuji:['#efe6f4','#fbf7fd'],momiji:['#f8e6d8','#fff8f2'],yuzu:['#f7f3d8','#fffdf3'],take:['#e3edd9','#f6faf3'],mizu:['#dceaf5','#f5f9fd'],kinari:['#f3ecdf','#fbf8f2'],kohaku:['#f8ead0','#fffaf1'],murasaki:['#ece4f6','#faf7fd'],toki:['#f8e4e6','#fff7f8'],moegi:['#e7f0c8','#f8fbea'],gin:['#e6e8ea','#f7f8f8'],chawan:['#f0e6d4','#fbf6ee'],yanagi:['#e4eee4','#f5faf5'],wakatake:['#e8f0dc','#f7fbf3'],usuzumi:['#e8e6e4','#f7f6f4'],ao:['#d9e6f6','#f4f8fd'],enji:['#f6e0dc','#fff6f4'],suzu:['#e4e7e4','#f6f7f6'],kakishibu:['#f6e3d4','#fff7f1'],hanada:['#d7e8f2','#f3f9fc'],kujaku:['#d7efe6','#f2fbf7'],komugi:['#f4ead4','#fdf8ee'],shirayuki:['#f4f6f8','#fbfcfd'],nuri:['#1a1412','#241c18'],tetsu:['#1c2024','#262b30'],kurocha:['#241c16','#2e241c'],nezumi:['#232528','#2c3034'],fukamidori:['#14241c','#1c3026'],konpeki:['#101c30','#17263c'],budou:['#241828','#301e36'],akatsuki:['#2a1820','#361f2a'],roiro:['#141414','#1c1c1c'],kachi:['#141828','#1c2236'],miru:['#142420','#1c302a'],susutake:['#26241c','#322e24'],namari:['#1e2226','#282e34'],enkai:['#0e1c24','#142830'],karasuba:['#16141a','#201c24'],sumizome:['#16181c','#1e2228'],benibana:['#2a1214','#38181c'],yamabuki:['#2a2414','#362e18'],rikyunezu:['#1c221c','#262e26'],soba:['#2a241c','#342c22'],ember:['#ffe3c2','#fff6ea'],dusk:['#15162a','#1c1d36'],slate:['#1e2326','#262c30'],crimson:['#141013','#1c1619'],leaf:['#dcebd2','#f5faf0'],lilac:['#e9e5f5','#faf8fe'],blaze:['#ffe1c7','#fff5ea'],harbor:['#fbe0d9','#fff7ee'],violet:['#1b1430','#231a3d'],forest:['#dfe6dc','#f5f7f0'],tide:['#121c19','#18241f'],blossom:['#fbe3ec','#fff6f9'],azure:['#10192a','#162236'],moon:['#fde6ef','#fff8fb']};
+const COLOR_THEMES={ember:'Ember',dusk:'Dusk',slate:'Slate',crimson:'Crimson',leaf:'Leaf',lilac:'Lilac',blaze:'Blaze',harbor:'Harbor',violet:'Violet',forest:'Forest',tide:'Tide',blossom:'Blossom',azure:'Azure',moon:'Moon'};
+const themeLabel=name=>COLOR_THEMES[name]||(name==='sage'?'Sage Green':name[0].toUpperCase()+name.slice(1));
 let activeSettingsTab='appearance';
 function drawSettings(){
   const root=$('drawerBody');root.replaceChildren();
   const nav=el('div','settings-tabs'),content=el('div','settings-content');
-  const tabs=[['general','General'],['appearance','Appearance'],['intelligence','Reasoning'],['privacy','Privacy']];
+  const tabs=[['appearance','Theme'],['language','Language'],['chat','Chat'],['reasoning','Reasoning'],['research','Research'],['tools','Tools'],['privacy','Privacy']];
+  if(!tabs.some(([id])=>id===activeSettingsTab))activeSettingsTab='appearance';
   for(const [id,title] of tabs){const tab=button(title,()=>{activeSettingsTab=id;drawSettings()},'settings-tab'+(activeSettingsTab===id?' active':''));nav.append(tab)}
   root.append(nav,content);
   const row=(title,description,child)=>{const node=el('div','settings-row'),texts=el('div','settings-row-description');texts.append(el('strong','',title),el('p','',description));node.append(texts);if(child)node.append(child);content.append(node);return node};
   const toggle=(name,key,description)=>{const box=el('input');box.type='checkbox';box.setAttribute('aria-label',name);box.checked=state.settings[key]===true;box.onchange=()=>persistSettings({[key]:box.checked});row(name,description,box)};
-  const select=(name,key,description,values)=>{const s=el('select','inline-input');for(const [label,value] of values)s.add(new Option(label,value));s.value=String(state.settings[key]??values[0][1]);s.onchange=async()=>{await persistSettings({[key]:s.value});if(key==='speed'){$('speed').value=s.value;state.speed=s.value}if(key==='effort'){$('effort').value=s.value;state.effort=s.value}if(key==='language')applyLocale()};row(name,description,s)};
-  if(activeSettingsTab==='general'){
-    content.append(el('h3','','Conversation controls'));
-    select('Conversation language','language','Automatic follows your latest message. Italian replies preserve code, paths and technical names.',[['Automatic','auto'],['Italiano','it'],['English','en']]);
+  const select=(name,key,description,values,wide=false)=>{const s=el('select','inline-input'+(wide?' settings-wide':''));for(const [label,value] of values)s.add(new Option(label,value));s.value=String(state.settings[key]??values[0][1]);s.onchange=async()=>{await persistSettings({[key]:s.value});if(key==='speed'){$('speed').value=s.value;state.speed=s.value}if(key==='effort'){$('effort').value=s.value;state.effort=s.value}if(key==='language')applyLocale()};row(name,description,s)};
+  if(activeSettingsTab==='appearance'){
+    const current=state.settings.theme||'porcelain';
+    const grid=names=>{const box=el('div','theme-grid');for(const name of names){const palette=TAKUMI_THEMES[name];const choice=button(themeLabel(name),async()=>{await persistSettings({theme:name});drawSettings()},'theme-option'+(current===name?' selected':''));choice.setAttribute('aria-pressed',String(current===name));const swatch=el('span','theme-swatch');swatch.style.setProperty('--sample-side',palette[0]);swatch.style.setProperty('--sample-main',palette[1]);choice.prepend(swatch);box.append(choice)}return box};
+    const names=Object.keys(TAKUMI_THEMES);
+    content.append(el('h3','','Color themes'),grid(names.filter(name=>COLOR_THEMES[name])));
+    content.append(el('h3','','Japanese-inspired themes'),grid(names.filter(name=>!COLOR_THEMES[name])));
+    content.append(el('p','muted','The original Takumi wave crest stays unchanged; dark themes place it on a clean ivory surface.'));
+  }else if(activeSettingsTab==='language'){
+    content.append(el('h3','','Language'));
+    const languageChoices=(state.languages&&state.languages.length?state.languages:[{id:'auto',name:'Automatic'},{id:'en',name:'English'},{id:'it',name:'Italiano'}]).map(item=>[item.name,item.id]);
+    const chosen=(state.languages||[]).find(item=>item.id===(state.settings.language||'auto'));
+    const note=chosen?.chrome==='full'?'Replies and menus are in English.':chosen?.chrome==='partial'?'Replies use this language. A few labels are translated; most menus stay in English.':'Replies use this language. Menus stay in English.';
+    select('Reply language','language',(state.settings.language||'auto')==='auto'?'Replies follow the language of your latest message. Menus stay in English.':note+' Code, paths, and technical names are never changed.',languageChoices,true);
+  }else if(activeSettingsTab==='chat'){
+    content.append(el('h3','','While you chat'));
+    select('Writing style','personality','Choose the tone of replies without changing evidence or technical rigor.',[['Precise','precise'],['Friendly','friendly'],['Technical','technical'],['Concise','concise'],['Craftsman','craftsman']]);
+    toggle('Enter to send','send_on_enter','Use Enter to send; Shift+Enter inserts a line break.');
     toggle('Live work updates','show_progress','Show chronological source lookups, tool actions, and checks directly in chat.');
     toggle('Citations','show_citations','Display source links with answers when searches found supporting leads.');
-    toggle('Enter to send','send_on_enter','Use Enter to send; Shift+Enter inserts a line break.');
     toggle('Read replies aloud','voice_output','Use available system voices after generation. Dictation is opt-in and may use a browser service.');
-    content.append(button('Check for software updates',()=>{drawUpdates();$('drawerBody').prepend(button('← Back to settings',drawSettings,'text-btn'))},'text-btn'));
     row('Chat history','Delete individual conversations from the sidebar using the × control.');
-    select('Writing style','personality','Choose the tone of replies without changing evidence or technical rigor.',[['Precise','precise'],['Friendly','friendly'],['Technical','technical'],['Concise','concise'],['Craftsman','craftsman']]);
-    content.append(button('Profile and import',()=>openDrawer('profile'),'text-btn'),button('Project tools and connections',()=>openDrawer('tools'),'text-btn'));
-  }else if(activeSettingsTab==='appearance'){
-    content.append(el('h3','','Japanese-inspired themes'));
-    const grid=el('div','theme-grid');
-    for(const [name,palette] of Object.entries(TAKUMI_THEMES)){
-      const choice=button(name==='sage'?'Sage Green':name[0].toUpperCase()+name.slice(1),async()=>{await persistSettings({theme:name});drawSettings()},'theme-option'+((state.settings.theme||'porcelain')===name?' selected':''));
-      choice.setAttribute('aria-pressed',String((state.settings.theme||'porcelain')===name));
-      const swatch=el('span','theme-swatch');swatch.style.setProperty('--sample-side',palette[0]);swatch.style.setProperty('--sample-main',palette[1]);choice.prepend(swatch);grid.append(choice)
-    }
-    content.append(grid,el('p','muted','The original Takumi wave crest stays unchanged; dark themes place it on a clean ivory surface.'));
-  }else if(activeSettingsTab==='intelligence'){
-    content.append(el('h3','','Takumi · Responses and reasoning'));
-    row('Model identity','Sumi 1.0 is the full profile; Rei 1.0 is optimized for lower-memory computers. Provenance is documented in the release notes.');
-    select('Speed profile','speed','Boost lowers generation and context budgets. It does not guarantee 1.5× tokens per second.',[['Standard','standard'],['1.5× Boost','boost']]);
-    toggle('Automatic model recovery','model_failover','Retry temporary failures. If another local model is installed, Takumi can switch to it and will label the change.');
+    content.append(button('Manage memory',()=>{closeDrawer();showView('knowledge')},'text-btn'),button('Profile and import',()=>openDrawer('profile'),'text-btn'),button('Check for software updates',()=>{drawUpdates();$('drawerBody').prepend(button('← Back to settings',drawSettings,'text-btn'))},'text-btn'));
+  }else if(activeSettingsTab==='reasoning'){
+    content.append(el('h3','','How hard Takumi works'));
+    row('Model identity','Sumi 1.1 is the full profile; Rei 1.1 is optimized for lower-memory computers. Provenance is documented in the release notes.');
     select('Reasoning effort','effort','Changes tool and verification budgets, not the underlying model intelligence.',[['Quick','quick'],['Balanced','balanced'],['High','high'],['Maximum','maximum']]);
-    toggle('Refine technical reports','refine_reports','Optional extra local editing pass improves clarity but adds latency.');
-    toggle('Check generated code','verify_generated_code','Check supported code blocks with the installed syntax tools.');
-    toggle('Correct generated code','repair_generated_code','Try one checked correction for generated engineering code. The original draft is kept; Boost skips the extra model call.');
-    select('Live research','research_mode','Automatic research uses public references as needed; never uploads local source files.',[['Automatic','auto'],['Every question','always'],['Offline','off']]);
-    toggle('Find source implementations','github_research','Search GitHub implementation references when a coding question benefits from current code.');
-    content.append(button('Connect free search providers',()=>openDrawer('tools'),'text-btn'));
     const native=el('select','inline-input');for(const val of state.nativeLevels||['default'])native.add(new Option(val==='default'?'Automatic':String(val),String(val)));
     native.value=String(state.reasoning);native.onchange=()=>state.reasoning=native.value;
     row('Native model thinking','Only levels advertised by the installed model are shown.',native);
+    select('Speed profile','speed','Boost lowers generation and context budgets. It does not guarantee 1.5× tokens per second.',[['Standard','standard'],['1.5× Boost','boost']]);
+    content.append(el('h3','','Checking answers'));
+    toggle('Check generated code','verify_generated_code','Check supported code blocks with the installed syntax tools.');
+    toggle('Correct generated code','repair_generated_code','Try one checked correction for generated engineering code. The original draft is kept; Boost skips the extra model call.');
+    toggle('Correct generated web pages','repair_generated_html','Try one correction when a generated HTML page fails its checks.');
+    toggle('Refine technical reports','refine_reports','Optional extra local editing pass improves clarity but adds latency.');
+    toggle('Automatic model recovery','model_failover','Retry temporary failures. If another local model is installed, Takumi can switch to it and will label the change.');
   }else if(activeSettingsTab==='research'){
-    content.append(el('h3','','Evidence and fallbacks'));
-    select('Research access','research_mode','Auto searches when current information is useful. Always sends a scrubbed search query for every prompt; Off stays offline.',[['Automatic','auto'],['Every question','always'],['Off','off']]);
-    toggle('GitHub implementation references','github_research','Use code search, public GitHub metadata, and local project sources when available.');
-    row('Fallback policy','Independent public search sources, authenticated GitHub CLI, local source search, and clearly labelled cached references. No source result is presented as verified code.');
-    content.append(button('Open Research',()=>{closeDrawer();showView('research')},'action-btn'));
-  }else if(activeSettingsTab==='personalization'){
-    content.append(el('h3','','Identity and memory'));
-    select('Takumi personality','personality','Coye is recognized as Takumi’s creator. Style changes how the assistant speaks, not facts.',[['Precise','precise'],['Friendly','friendly'],['Technical','technical'],['Concise','concise'],['Craftsman','craftsman']]);
-    content.append(button('Manage memory',()=>{closeDrawer();showView('knowledge')},'text-btn'));
+    content.append(el('h3','','Web research'));
+    select('Live research','research_mode','Automatic searches when current information is useful. Every question sends a scrubbed search query each time. Offline never searches. Local source files are never uploaded.',[['Automatic','auto'],['Every question','always'],['Offline','off']]);
+    toggle('Find source implementations','github_research','Search GitHub implementation references when a coding question benefits from current code.');
+    row('When search is unavailable','Takumi falls back to independent public sources, your GitHub sign-in, local project search, and clearly labelled saved references. No source result is presented as verified code.');
+    content.append(button('Open Research',()=>{closeDrawer();showView('research')},'text-btn'),button('Connect free search providers',()=>openDrawer('tools'),'text-btn'),button('Delete cached research',async()=>{if(!confirm('Delete saved public research leads from this PC?'))return;try{await api('/api/research/cache/clear',{});toast('Research cache cleared')}catch(e){toast(e.message)}},'text-btn'));
   }else if(activeSettingsTab==='tools'){
-    content.append(el('h3','','Projects and extensions'));
-    row('Autonomous coding','Takumi works in bounded passes and keeps real test evidence.');
-    const selectPasses=el('select','inline-input');for(const val of [4,8,12])selectPasses.add(new Option(`${val} passes`,String(val)));selectPasses.value=String(state.settings.autonomy_passes||8);
-    selectPasses.onchange=()=>persistSettings({autonomy_passes:Number(selectPasses.value)});
-    row('Work limit','Maximum consecutive coding passes per task.',selectPasses);
-    content.append(button('Manage plugins',()=>{closeDrawer();showView('plugins')},'text-btn'),button('Test harness',()=>openDrawer('harness'),'text-btn'),button('Connect iPhone',()=>openDrawer('remote'),'text-btn'),button('Discord bot',()=>openDrawer('bots'),'text-btn'));
+    content.append(el('h3','','Tools and connections'));
+    row('Plugins','Figma, Forge, and browser tools are turned on and off here, and only reach the model when enabled.');
+    content.append(button('Manage plugins',()=>{closeDrawer();showView('plugins')},'text-btn'),button('Project tools and connections',()=>openDrawer('tools'),'text-btn'),button('Test harness',()=>openDrawer('harness'),'text-btn'),button('Connect iPhone',()=>openDrawer('remote'),'text-btn'),button('Discord bot',()=>openDrawer('bots'),'text-btn'),button('Sumi trainer',()=>openDrawer('training'),'text-btn'));
   }else if(activeSettingsTab==='privacy'){
     content.append(el('h3','','On-device control'));
-    row('Local model','Your chat model runs on your PC. Opt-in research requests connect to public search providers, so disable Research for confidential questions.');
+    row('Local model','Your chat model runs on your PC. Opt-in research requests connect to public search providers, so set research to Offline for confidential questions.');
     row('Project access','Run development tools in the selected project. Publishing requires a one-time local approval.');
-    content.append(button('Delete cached research',async()=>{if(!confirm('Delete saved public research leads from this PC?'))return;try{await api('/api/research/cache/clear',{});toast('Research cache cleared')}catch(e){toast(e.message)}},'text-btn'));
-    content.append(button('Manage paired phones',()=>openDrawer('remote'),'text-btn'),button('Sumi trainer',()=>openDrawer('training'),'text-btn'));
+    content.append(button('Manage paired phones',()=>openDrawer('remote'),'text-btn'));
   }
+}
+function speechTag(sample=''){
+  const code=state.settings.language||'auto';
+  const row=(state.languages||[]).find(item=>item.id===code);
+  if(row&&row.speech)return row.speech;
+  if(code==='auto')return /\b(?:il|la|questo|sono|posso|grazie)\b/i.test(sample||$('prompt')?.value||'')?'it-IT':(navigator.language||'en-US');
+  return code==='it'?'it-IT':'en-US';
 }
 function applyLocale(){
   const it=state.settings.language==='it';
-  document.documentElement.lang=it?'it':'en';
+  const chosen=(state.languages||[]).find(item=>item.id===state.settings.language);
+  document.documentElement.lang=state.settings.language&&state.settings.language!=='auto'?state.settings.language:'en';
+  document.documentElement.dir=chosen?.dir||'ltr';
   const nav=$('navChats');if(nav)nav.lastChild.textContent=it?'Conversazioni':'Conversations';
   const newLabel=$('newChat')?.querySelector('span');if(newLabel)newLabel.textContent=it?'Nuova chat':'New chat';
   const welcome=$('welcome')?.querySelector('h1');if(welcome)welcome.textContent=it?'Su cosa lavoriamo?':'What are we working on?';
@@ -927,14 +1103,37 @@ function applyLocale(){
   if(hint)hint.lastChild.textContent=it?'Sessione locale · File sul tuo computer':'Local session · Files stay on your machine';
   if(!state.busy){$('prompt').placeholder=it?'Chiedi qualcosa a Takumi…':'Ask Takumi anything…'}
 }
-async function refreshBootstrap(){const b=await api('/api/bootstrap');state.token=b.token||state.token;saveLocalToken();state.projects=b.projects||[];state.sessions=b.sessions||[];state.modelCatalog=b.model_catalog||[];state.sumi=b.sumi||null;state.project=b.active_project||state.project;state.settings=b.settings||state.settings;applyLocale();refreshResearchSwitch();document.body.dataset.theme=state.settings.theme||'porcelain';syncDesktopChrome();state.speed=state.settings.speed||state.speed;state.effort=state.settings.effort||state.effort;$('speed').value=state.speed;$('effort').value=state.effort;renderModelOptions(b.models||[]);statusBadge({ollama:!!b.models?.length});renderRecents();$('workspaceLabel').textContent=selectedProject()?.name||'Workspace';$('projectQuickLabel').textContent=selectedProject()?.name||'Choose project';$('profileName').textContent=b.profile?.label||'Guest workspace';return b}
+async function refreshBootstrap(){const b=await api('/api/bootstrap');state.token=b.token||state.token;saveLocalToken();state.projects=b.projects||[];state.sessions=b.sessions||[];state.modelCatalog=b.model_catalog||[];state.library=b.library||[];state.clineInstalled=!!b.cline_installed;state.languages=b.languages||[];state.sumi=b.sumi||null;state.project=b.active_project||state.project;state.settings=b.settings||state.settings;applyLocale();refreshResearchSwitch();document.body.dataset.theme=state.settings.theme||'porcelain';syncDesktopChrome();state.speed=state.settings.speed||state.speed;state.effort=state.settings.effort||state.effort;$('speed').value=state.speed;$('effort').value=state.effort;renderModelOptions(b.models||[]);statusBadge({ollama:!!b.models?.length});renderRecents();$('workspaceLabel').textContent=selectedProject()?.name||'Workspace';$('projectQuickLabel').textContent=selectedProject()?.name||'Choose project';$('profileName').textContent=b.profile?.label||'Guest workspace';return b}
 async function initialConnection(){const r=await fetch('/api/remote-info',{signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error('Takumi is not reachable from this device');const info=await r.json();state.remote=!!info.remote;if(state.remote){state.token=localStorage.getItem('takumi-pair-token')||'';if(!state.token){$('pairDialog').showModal();return false}try{await refreshBootstrap()}catch(error){if(error.status!==403&&error.status!==401)throw error;$('pairDialog').showModal();return false}return true}await refreshBootstrap();return true}
 async function pairDevice(e){e.preventDefault();$('pairError').textContent='';try{const r=await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:$('pairCode').value,label:'iPhone / Takumi PWA'})});const o=await r.json();if(!r.ok)throw new Error(o.error||'Pairing failed');state.token=o.token;saveLocalToken();$('pairDialog').close();await initializeWorkspace();workspaceReady=true}catch(err){$('pairError').textContent=err.message}}
 async function initializeWorkspace(){await refreshBootstrap();if(state.sessions.length)await openSession(state.sessions[0].id);else await newSession(state.project)}
 function bind(){bindCodeWorkspace();
  const jump=button('Jump to latest',()=>{state.tailFollow=true;scrollThread();jump.hidden=true},'jump-latest');jump.hidden=true;$('chatView').append(jump);
  $('thread').addEventListener('scroll',()=>{const t=$('thread');state.tailFollow=t.scrollHeight-t.scrollTop-t.clientHeight<70;jump.hidden=state.tailFollow},{passive:true});
-for(const nav of document.querySelectorAll('[data-view]'))nav.onclick=()=>nav.dataset.view==='kage'?openKageChat():showView(nav.dataset.view);$('newChat').onclick=()=>newSession();$('sidebarSettings').onclick=()=>openDrawer('settings');$('settingsButton').onclick=()=>openDrawer('settings');$('drawerClose').onclick=closeDrawer;$('companionButton').onclick=()=>openDrawer('companion');$('connectionButton').onclick=()=>openDrawer('tools');$('researchToggle').onclick=cycleResearchSwitch;$('profileOpen').onclick=()=>openDrawer('profile');$('projectQuick').onclick=openProjectDialog;$('workspaceAction').onclick=openProjectDialog;$('mobileMenu').onclick=openMobile;$('mobileScrim').onclick=closeMobile;$('sidebarCollapse').onclick=()=>{if(window.innerWidth<701)closeMobile();else $('sidebar').style.display=$('sidebar').style.display==='none'?'':'none'};$('send').onclick=send;$('stop').onclick=stop;$('mode').onchange=()=>setMode($('mode').value);$('model').onchange=()=>{state.model=$('model').value;rememberModelChoice();refreshNativeLevels()};$('speed').onchange=()=>{state.speed=$('speed').value;persistSettings({speed:state.speed});toast(state.speed==='boost'?'Boost reduces unnecessary context and output. Actual speed varies.':'Standard speed restored.')};$('effort').onchange=()=>{state.effort=$('effort').value;persistSettings({effort:state.effort})};$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&state.settings.send_on_enter!==false){e.preventDefault();send()}});document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();newSession()}if(e.key==='Escape')closeDrawer()});$('projectForm').onsubmit=async e=>{e.preventDefault();try{const result=await api('/api/projects',{path:$('projectPath').value});state.project=result.project.id;$('projectDialog').close();await refreshBootstrap();await newSession(state.project)}catch(err){toast(err.message)}};$('cancelProject').onclick=()=>$('projectDialog').close();$('nativePick').onclick=async()=>{try{const r=await api('/api/projects/pick',{});$('projectDialog').close();state.project=r.project.id;await refreshBootstrap();await newSession(state.project)}catch(e){toast(e.message)}};$('pairForm').onsubmit=pairDevice;$('voiceMic').onclick=voiceDictate;$('attachmentButton').onclick=()=>$('attachment').click();$('attachment').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>24000)return toast('Attach text files under 24 KB; larger logs should stay in the selected project.');try{$('prompt').value+=`\n\n[Attached text: ${file.name}]\n`+await file.text();toast('Text added to your message.')}catch(err){toast(err.message)}};
+for(const nav of document.querySelectorAll('[data-view]'))nav.onclick=()=>nav.dataset.view==='kage'?openKageChat():showView(nav.dataset.view);$('newChat').onclick=()=>newSession();$('sidebarSettings').onclick=()=>openDrawer('settings');$('settingsButton').onclick=()=>openDrawer('settings');$('drawerClose').onclick=closeDrawer;$('companionButton').onclick=()=>openDrawer('companion');$('connectionButton').onclick=()=>openDrawer('tools');$('researchToggle').onclick=cycleResearchSwitch;$('profileOpen').onclick=()=>openDrawer('profile');$('projectQuick').onclick=openProjectDialog;$('workspaceAction').onclick=openProjectDialog;$('mobileMenu').onclick=openMobile;$('mobileScrim').onclick=closeMobile;$('sidebarCollapse').onclick=()=>{if(window.innerWidth<701)closeMobile();else $('sidebar').style.display=$('sidebar').style.display==='none'?'':'none'};$('send').onclick=send;$('stop').onclick=stop;$('mode').onchange=()=>setMode($('mode').value);$('model').onchange=()=>{state.model=$('model').value;rememberModelChoice();syncModelMenu();refreshNativeLevels()};$('modelMenu').onclick=()=>{if($('modelMenu').getAttribute('aria-expanded')==='true')closeModelMenu();else openModelMenu()};document.addEventListener('pointerdown',e=>{if(!e.target.closest('.model-top-select'))closeModelMenu()});$('speed').onchange=()=>{state.speed=$('speed').value;persistSettings({speed:state.speed});toast(state.speed==='boost'?'Boost reduces unnecessary context and output. Actual speed varies.':'Standard speed restored.')};$('effort').onchange=()=>{state.effort=$('effort').value;persistSettings({effort:state.effort})};$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&state.settings.send_on_enter!==false){e.preventDefault();send()}});document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();newSession()}if(e.key==='Escape'){closeModelMenu();closeDrawer()}});$('projectForm').onsubmit=async e=>{e.preventDefault();try{const result=await api('/api/projects',{path:$('projectPath').value});await useSelectedProject(result.project)}catch(err){toast(err.message)}};$('cancelProject').onclick=()=>$('projectDialog').close();$('nativePick').onclick=async()=>{try{const r=await api('/api/projects/pick',{});await useSelectedProject(r.project)}catch(e){toast(e.message)}};$('pairForm').onsubmit=pairDevice;$('voiceMic').onclick=voiceDictate;$('attachmentButton').onclick=()=>$('attachment').click();$('attachment').onchange=async e=>{
+  const files=[...(e.target.files||[])];e.target.value='';
+  for(const file of files){
+    if(state.pending.length>=4){toast('Attach at most 4 files.');break}
+    const name=file.name||'attachment';
+    const image=/\.(png|jpe?g|webp)$/i.test(name)||['image/png','image/jpeg','image/webp'].includes(file.type);
+    try{
+      if(image){
+        if(/\.(svg|gif)$/i.test(name)){toast(name+' is not a PNG, JPEG, or WebP.');continue}
+        if(file.size>1200000){toast(name+' is over 1.2 MB.');continue}
+        if(state.pending.filter(item=>item.kind==='image').length>=2){toast('Attach at most 2 images.');continue}
+        const data=await fileBase64(file);
+        state.pending.push({kind:'image',name,data,file});
+        if(!state.modelVision)toast(name+' stays on this PC. This model has not advertised vision, so its pixels will not be sent.');
+      }else{
+        if(file.size>180000){toast(name+' is over 180,000 characters. Put it in the project instead.');continue}
+        const text=await file.text();
+        if(text.includes('\u0000')){toast(name+' is not a text log.');continue}
+        state.pending.push({kind:'log',name,text});
+      }
+    }catch(err){toast(err.message||'Could not read '+name)}
+  }
+  renderPending();
+};
  document.body.classList.add('ready');window.addEventListener('online',recoverConnection);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')recoverConnection()});}
 let workspaceReady=false,connectionCheck=false;
 async function recoverConnection(){
@@ -948,3 +1147,4 @@ async function recoverConnection(){
 }
 async function init(){bind();window.refreshKage?.();try{document.body.dataset.theme=localStorage.getItem('takumi-theme')||'porcelain';syncDesktopChrome()}catch{}await recoverConnection();setInterval(recoverConnection,10000);if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('/sw.js').catch(()=>{})}}
 init();
+

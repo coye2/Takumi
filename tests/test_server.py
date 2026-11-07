@@ -75,6 +75,19 @@ class HttpTests(unittest.TestCase):
             self.request('/api/projects', {'path':'/a/nonexistent/path'})
         self.assertEqual(err.exception.code,400)
 
+    def test_project_preflight_requires_auth_and_resolves_edit_intent(self):
+        prompt = 'Add this GitHub repository to my website: https://github.com/example/tool'
+        with self.assertRaises(urllib.error.HTTPError) as err:
+            self.request('/api/project/preflight', {'prompt':prompt}, token=False)
+        self.assertEqual(err.exception.code, 403)
+        check = json.loads(self.request('/api/project/preflight', {'prompt':prompt,'mode':'auto'}))
+        self.assertTrue(check['needs_project'])
+        project = self.runtime.store.register_project(self.temp.name)
+        check = json.loads(self.request('/api/project/preflight',
+            {'prompt':prompt, 'mode':'auto', 'project_id':project['id']}))
+        self.assertEqual(check, {'mode':'agent','needs_project':False})
+        with self.assertRaises(urllib.error.HTTPError):
+            self.request('/api/project/preflight', {'prompt':prompt,'project_id':'missing'})
     def test_agent_auto_continuation_and_polishing(self):
         FakeAgent.calls=[]
         root=Path(self.temp.name)/'repo';root.mkdir(exist_ok=True)
@@ -199,3 +212,4 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(UnfinishedAgent.count,3)
 
 if __name__=='__main__':unittest.main()
+

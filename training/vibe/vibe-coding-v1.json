@@ -1,0 +1,997 @@
+{
+ "version": "vibe-coding-v1",
+ "purpose": "Teach the edit format and the repair turn used by the verified loop",
+ "license": "MIT",
+ "source": "Original fixtures in training/vibe/tasks.py; no private source or game data",
+ "validator_sha256": "5c1c05941b4850f988fa95c2f39c4343247ec912466002bd4095c486d544a413",
+ "audit": [
+  {
+   "id": "py-window-sum",
+   "status": "verified",
+   "split": "train",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-dedupe",
+   "status": "verified",
+   "split": "train",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-import-error",
+   "status": "verified",
+   "split": "train",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-backoff",
+   "status": "verified",
+   "split": "train",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "js-query",
+   "status": "verified",
+   "split": "train",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "js-bytes",
+   "status": "verified",
+   "split": "train",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "js-escape",
+   "status": "verified",
+   "split": "train",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-manifest-icons",
+   "status": "verified",
+   "split": "train",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-register",
+   "status": "verified",
+   "split": "train",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-cache-key",
+   "status": "verified",
+   "split": "train",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "cs-undefined",
+   "status": "verified",
+   "split": "train",
+   "platform": "dotnet",
+   "seconds": 2.28
+  },
+  {
+   "id": "cs-top",
+   "status": "verified",
+   "split": "train",
+   "platform": "dotnet",
+   "seconds": 2.33
+  },
+  {
+   "id": "cs-null",
+   "status": "verified",
+   "split": "train",
+   "platform": "dotnet",
+   "seconds": 2.33
+  },
+  {
+   "id": "cpp-include",
+   "status": "verified",
+   "split": "train",
+   "platform": "cpp",
+   "seconds": 0.45
+  },
+  {
+   "id": "cpp-ring",
+   "status": "verified",
+   "split": "train",
+   "platform": "cpp",
+   "seconds": 0.1
+  },
+  {
+   "id": "cpp-trim",
+   "status": "verified",
+   "split": "train",
+   "platform": "cpp",
+   "seconds": 0.45
+  },
+  {
+   "id": "java-page",
+   "status": "verified",
+   "split": "train",
+   "platform": "android",
+   "seconds": 0.64
+  },
+  {
+   "id": "java-state",
+   "status": "verified",
+   "split": "train",
+   "platform": "android",
+   "seconds": 0.64
+  },
+  {
+   "id": "android-exported",
+   "status": "verified",
+   "split": "train",
+   "platform": "android",
+   "seconds": 0.05
+  },
+  {
+   "id": "android-permission",
+   "status": "verified",
+   "split": "train",
+   "platform": "android",
+   "seconds": 0.05
+  },
+  {
+   "id": "ios-camera",
+   "status": "verified",
+   "split": "train",
+   "platform": "ios",
+   "seconds": 0.05
+  },
+  {
+   "id": "ios-orientation",
+   "status": "verified",
+   "split": "train",
+   "platform": "ios",
+   "seconds": 0.05
+  },
+  {
+   "id": "js-has",
+   "status": "verified",
+   "split": "train",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "py-channel",
+   "status": "verified",
+   "split": "train",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "ios-app-group",
+   "status": "verified",
+   "split": "train",
+   "platform": "ios",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-chunk",
+   "status": "verified",
+   "split": "dev",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "js-semver",
+   "status": "verified",
+   "split": "dev",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "cs-clamp-page",
+   "status": "verified",
+   "split": "dev",
+   "platform": "dotnet",
+   "seconds": 2.28
+  },
+  {
+   "id": "cpp-popcount",
+   "status": "verified",
+   "split": "dev",
+   "platform": "cpp",
+   "seconds": 0.1
+  },
+  {
+   "id": "py-merge-ranges",
+   "status": "verified",
+   "split": "test",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "js-deep-get",
+   "status": "verified",
+   "split": "test",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-offline",
+   "status": "verified",
+   "split": "test",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "cs-rate",
+   "status": "verified",
+   "split": "test",
+   "platform": "dotnet",
+   "seconds": 2.34
+  },
+  {
+   "id": "cpp-transpose",
+   "status": "verified",
+   "split": "test",
+   "platform": "cpp",
+   "seconds": 0.35
+  },
+  {
+   "id": "java-undo",
+   "status": "verified",
+   "split": "test",
+   "platform": "android",
+   "seconds": 0.69
+  },
+  {
+   "id": "android-deeplink",
+   "status": "verified",
+   "split": "test",
+   "platform": "android",
+   "seconds": 0.05
+  },
+  {
+   "id": "ios-url-scheme",
+   "status": "verified",
+   "split": "test",
+   "platform": "ios",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-csv-row",
+   "status": "verified",
+   "split": "dev",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "js-lru",
+   "status": "verified",
+   "split": "dev",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-route",
+   "status": "verified",
+   "split": "dev",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "cs-bus",
+   "status": "verified",
+   "split": "dev",
+   "platform": "dotnet",
+   "seconds": 2.33
+  },
+  {
+   "id": "cpp-parse",
+   "status": "verified",
+   "split": "dev",
+   "platform": "cpp",
+   "seconds": 0.45
+  },
+  {
+   "id": "java-throttle",
+   "status": "verified",
+   "split": "dev",
+   "platform": "android",
+   "seconds": 0.64
+  },
+  {
+   "id": "ios-background",
+   "status": "verified",
+   "split": "dev",
+   "platform": "ios",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-reserve",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "py-build-order",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "python",
+   "seconds": 0.05
+  },
+  {
+   "id": "js-retry",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "js-template",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "web",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-precache",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "pwa-scope",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "pwa",
+   "seconds": 0.1
+  },
+  {
+   "id": "cs-split",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "dotnet",
+   "seconds": 2.34
+  },
+  {
+   "id": "cs-config",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "dotnet",
+   "seconds": 2.34
+  },
+  {
+   "id": "cpp-split",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "cpp",
+   "seconds": 0.55
+  },
+  {
+   "id": "cpp-intervals",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "cpp",
+   "seconds": 0.65
+  },
+  {
+   "id": "java-history",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "android",
+   "seconds": 0.69
+  },
+  {
+   "id": "android-sync-service",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "android",
+   "seconds": 0.05
+  },
+  {
+   "id": "ios-local-http",
+   "status": "verified",
+   "split": "holdout2",
+   "platform": "ios",
+   "seconds": 0.05
+  }
+ ],
+ "examples": [
+  {
+   "id": "py-window-sum",
+   "project": "python",
+   "task_family": "sliding-window",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: python\n\nFiles:\n--- app.py\ndef window_sum(items, size):\n    return [sum(items[i:i + size]) for i in range(len(items) - size)]\n\n--- test_visible.py\nimport unittest\nfrom app import *\nclass T(unittest.TestCase):\n    def test_basic(self): self.assertEqual(window_sum([1, 2, 3], 2), [3, 5])\n\n\nTask: window_sum drops the last window. Fix it."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\n    return [sum(items[i:i + size]) for i in range(len(items) - size)]\n=======\n    return [sum(items[i:i + size]) for i in range(len(items) - size + 1)]\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "py-dedupe",
+   "project": "python",
+   "task_family": "order-preserving",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: python\n\nFiles:\n--- app.py\ndef dedupe(items):\n    raise NotImplementedError\n\n--- test_visible.py\nimport unittest\nfrom app import *\nclass T(unittest.TestCase):\n    def test_basic(self): self.assertEqual(dedupe([2, 1, 2]), [2, 1])\n\n\nTask: Implement dedupe so it removes repeats and keeps first-seen order."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\n    raise NotImplementedError\n=======\n    return list(dict.fromkeys(items))\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "py-import-error",
+   "project": "python",
+   "task_family": "missing-import",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: python\n\nFiles:\n--- app.py\ndef circle_area(r):\n    return math.pi * r * r\n\n--- test_visible.py\nimport unittest\nfrom app import *\nclass T(unittest.TestCase):\n    def test_unit(self): self.assertAlmostEqual(circle_area(1), 3.14159, places=4)\n\n\nTask: The tests fail with NameError: name 'math' is not defined. Fix the cause."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\ndef circle_area(r):\n=======\nimport math\n\n\ndef circle_area(r):\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "py-backoff",
+   "project": "python",
+   "task_family": "retry-policy",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: python\n\nFiles:\n--- app.py\ndef backoff(attempt, base, cap):\n    return base\n\n--- test_visible.py\nimport unittest\nfrom app import *\nclass T(unittest.TestCase):\n    def test_grows(self): self.assertEqual(backoff(2, 1, 100), 4)\n\n\nTask: Implement backoff(attempt, base, cap): base doubled per attempt starting at attempt 0, never above cap."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\n    return base\n=======\n    return min(cap, base * 2 ** attempt)\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "js-query",
+   "project": "web",
+   "task_family": "query-string",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: web\n\nFiles:\n--- app.mjs\nexport function parseQuery(text) {\n  const out = {};\n  for (const part of text.replace(/^\\?/, '').split('&')) {\n    if (!part) continue;\n    const [key, value = ''] = part.split('=');\n    out[key] = value;\n  }\n  return out;\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parseQuery } from './app.mjs';\ntest('value', () => assert.deepEqual(parseQuery('?a=1%202'), { a: '1 2' }));\n\n\nTask: parseQuery must decode percent escapes and plus signs in keys and values."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n    out[key] = value;\n=======\n    const decode = (s) => decodeURIComponent(s.replace(/\\+/g, ' '));\n    out[decode(key)] = decode(value);\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "js-bytes",
+   "project": "web",
+   "task_family": "unit-format",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: web\n\nFiles:\n--- app.mjs\nexport function formatBytes(n) {\n  return `${n} B`;\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { formatBytes } from './app.mjs';\ntest('kb', () => assert.equal(formatBytes(2048), '2.0 KB'));\n\n\nTask: formatBytes should use KB and MB (1024 based) with one decimal once the value reaches them."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n  return `${n} B`;\n=======\n  if (n < 1024) return `${n} B`;\n  if (n < 1048576) return `${(n / 1024).toFixed(1)} KB`;\n  return `${(n / 1048576).toFixed(1)} MB`;\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "js-escape",
+   "project": "web",
+   "task_family": "html-escape",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: web\n\nFiles:\n--- app.mjs\nexport function escapeHtml(text) {\n  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;');\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { escapeHtml } from './app.mjs';\ntest('tag', () => assert.equal(escapeHtml('<b>'), '&lt;b&gt;'));\n\n\nTask: escapeHtml misses single and double quotes, and it escapes & last, which corrupts the output. Fix it."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;');\n=======\n  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#39;');\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "pwa-manifest-icons",
+   "project": "pwa",
+   "task_family": "install-manifest",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: pwa\n\nFiles:\n--- manifest.webmanifest\n{\n  \"name\": \"Notes\",\n  \"start_url\": \"/\",\n  \"display\": \"standalone\",\n  \"icons\": []\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\nconst m = JSON.parse(readFileSync('manifest.webmanifest', 'utf8'));\ntest('has icons', () => assert.ok(m.icons.length >= 2));\n\n\nTask: The app cannot be installed. Add the 192x192 and 512x512 PNG icons (icon-192.png, icon-512.png) to the manifest."
+    },
+    {
+     "role": "assistant",
+     "content": "manifest.webmanifest\n<<<<<<< SEARCH\n  \"icons\": []\n=======\n  \"icons\": [\n    { \"src\": \"icon-192.png\", \"sizes\": \"192x192\", \"type\": \"image/png\" },\n    { \"src\": \"icon-512.png\", \"sizes\": \"512x512\", \"type\": \"image/png\" }\n  ]\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "pwa-register",
+   "project": "pwa",
+   "task_family": "sw-registration",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: pwa\n\nFiles:\n--- index.html\n<!doctype html>\n<html>\n<head>\n  <title>Notes</title>\n</head>\n<body>\n  <main id=\"app\"></main>\n</body>\n</html>\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\nconst h = readFileSync('index.html', 'utf8');\ntest('manifest', () => assert.match(h, /rel=\"manifest\"/));\n\n\nTask: Make index.html link manifest.webmanifest and register /sw.js when the browser supports service workers."
+    },
+    {
+     "role": "assistant",
+     "content": "index.html\n<<<<<<< SEARCH\n  <title>Notes</title>\n=======\n  <title>Notes</title>\n  <link rel=\"manifest\" href=\"manifest.webmanifest\">\n>>>>>>> REPLACE\n\nindex.html\n<<<<<<< SEARCH\n  <main id=\"app\"></main>\n=======\n  <main id=\"app\"></main>\n  <script>\n    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');\n  </script>\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "pwa-cache-key",
+   "project": "pwa",
+   "task_family": "cache-versioning",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: pwa\n\nFiles:\n--- app.mjs\nexport const CURRENT = 'app-v3';\nexport function staleCaches(names) {\n  return [];\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { staleCaches } from './app.mjs';\ntest('old', () => assert.deepEqual(staleCaches(['app-v2', 'app-v3']), ['app-v2']));\n\n\nTask: Old caches are never deleted. staleCaches must return every cache name except the current one."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n  return [];\n=======\n  return names.filter((name) => name !== CURRENT);\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "cs-undefined",
+   "project": "dotnet",
+   "task_family": "undefined-name",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: dotnet\n\nFiles:\n--- Lib.cs\nnamespace App;\npublic static class Lib {\n  public static int Sum(int[] items) {\n    foreach (var item in items) total += item;\n    return total;\n  }\n}\n\n--- VisibleTests.cs\nusing System;\nusing App;\nstatic class VisibleTests {\n  static void Eq<T>(T a, T b) { if (!Equals(a, b)) throw new Exception($\"expected {b}, got {a}\"); }\n  public static void Run() {\n    Eq(Lib.Sum(new[] { 1, 2 }), 3);\n  }\n}\n\n\nTask: The build fails with CS0103: The name 'total' does not exist in the current context. Fix the cause."
+    },
+    {
+     "role": "assistant",
+     "content": "Lib.cs\n<<<<<<< SEARCH\n    foreach (var item in items) total += item;\n=======\n    var total = 0;\n    foreach (var item in items) total += item;\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "cs-top",
+   "project": "dotnet",
+   "task_family": "linq-ranking",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: dotnet\n\nFiles:\n--- Lib.cs\nusing System.Linq;\nnamespace App;\npublic static class Lib {\n  public static int[] TopN(int[] items, int n) => items.Take(n).ToArray();\n}\n\n--- VisibleTests.cs\nusing System;\nusing App;\nstatic class VisibleTests {\n  static void Eq<T>(T a, T b) { if (!Equals(a, b)) throw new Exception($\"expected {b}, got {a}\"); }\n  public static void Run() {\n    Eq(string.Join(\",\", Lib.TopN(new[] { 1, 3, 2 }, 2)), \"3,2\");\n  }\n}\n\n\nTask: TopN must return the n largest values, largest first."
+    },
+    {
+     "role": "assistant",
+     "content": "Lib.cs\n<<<<<<< SEARCH\n=> items.Take(n).ToArray();\n=======\n=> items.OrderByDescending(x => x).Take(n).ToArray();\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "cs-null",
+   "project": "dotnet",
+   "task_family": "null-guard",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: dotnet\n\nFiles:\n--- Lib.cs\nnamespace App;\npublic static class Lib {\n  public static string Initials(string? name) {\n    return string.Concat(name!.Split(\" \").Select(p => p[0]));\n  }\n}\n\n--- VisibleTests.cs\nusing System;\nusing App;\nstatic class VisibleTests {\n  static void Eq<T>(T a, T b) { if (!Equals(a, b)) throw new Exception($\"expected {b}, got {a}\"); }\n  public static void Run() {\n    Eq(Lib.Initials(\"ada lovelace\"), \"AL\");\n  }\n}\n\n\nTask: Initials throws on null or blank names. Return an empty string for those, and uppercase initials of each word otherwise."
+    },
+    {
+     "role": "assistant",
+     "content": "Lib.cs\n<<<<<<< SEARCH\n    return string.Concat(name!.Split(\" \").Select(p => p[0]));\n=======\n    if (string.IsNullOrWhiteSpace(name)) return \"\";\n    return string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(p => char.ToUpperInvariant(p[0])));\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "cpp-include",
+   "project": "cpp",
+   "task_family": "missing-header",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: cpp\n\nFiles:\n--- lib.h\n#pragma once\ninline std::string greet(const std::string& name) { return \"hi \" + name; }\n\n--- visible_test.cpp\n#include \"check.h\"\n#include \"lib.h\"\nstatic int run = [] {\n  CHECK(greet(\"a\") == \"hi a\");\n  return 0;\n}();\n\n\nTask: The build fails with: error: 'string' in namespace 'std' does not name a type. Fix the cause."
+    },
+    {
+     "role": "assistant",
+     "content": "lib.h\n<<<<<<< SEARCH\n#pragma once\n=======\n#pragma once\n#include <string>\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "cpp-ring",
+   "project": "cpp",
+   "task_family": "ring-index",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: cpp\n\nFiles:\n--- lib.h\n#pragma once\n#include <cstddef>\ninline std::size_t next_index(std::size_t i, std::size_t capacity) { return i + 1; }\n\n--- visible_test.cpp\n#include \"check.h\"\n#include \"lib.h\"\nstatic int run = [] {\n  CHECK(next_index(0, 4) == 1);\n  CHECK(next_index(3, 4) == 0);\n  return 0;\n}();\n\n\nTask: next_index must wrap to 0 at capacity instead of running off the end."
+    },
+    {
+     "role": "assistant",
+     "content": "lib.h\n<<<<<<< SEARCH\n{ return i + 1; }\n=======\n{ return (i + 1) % capacity; }\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "cpp-trim",
+   "project": "cpp",
+   "task_family": "string-trim",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: cpp\n\nFiles:\n--- lib.h\n#pragma once\n#include <string>\ninline std::string trim(const std::string& s) { return s; }\n\n--- visible_test.cpp\n#include \"check.h\"\n#include \"lib.h\"\nstatic int run = [] {\n  CHECK(trim(\"  a \") == \"a\");\n  return 0;\n}();\n\n\nTask: Implement trim: remove leading and trailing spaces and tabs."
+    },
+    {
+     "role": "assistant",
+     "content": "lib.h\n<<<<<<< SEARCH\n{ return s; }\n=======\n{\n  const auto first = s.find_first_not_of(\" \\t\");\n  if (first == std::string::npos) return \"\";\n  const auto last = s.find_last_not_of(\" \\t\");\n  return s.substr(first, last - first + 1);\n}\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "java-page",
+   "project": "android",
+   "task_family": "pagination",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: android\n\nFiles:\n--- Lib.java\npublic class Lib {\n  public static int pageCount(int items, int perPage) {\n    return items / perPage;\n  }\n}\n\n--- Tests.java\npublic class Tests {\n  static void eq(Object a, Object b) { if (!java.util.Objects.equals(a, b)) throw new AssertionError(\"expected \" + b + \", got \" + a); }\n  public static void main(String[] args) {\n    eq(Lib.pageCount(10, 3), 4);\n  }\n}\n\n\nTask: pageCount must round up: 10 items at 3 per page is 4 pages."
+    },
+    {
+     "role": "assistant",
+     "content": "Lib.java\n<<<<<<< SEARCH\n    return items / perPage;\n=======\n    return (items + perPage - 1) / perPage;\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "java-state",
+   "project": "android",
+   "task_family": "ui-state-machine",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: android\n\nFiles:\n--- Lib.java\npublic class Lib {\n  public static String next(String state, boolean ok) {\n    return state;\n  }\n}\n\n--- Tests.java\npublic class Tests {\n  static void eq(Object a, Object b) { if (!java.util.Objects.equals(a, b)) throw new AssertionError(\"expected \" + b + \", got \" + a); }\n  public static void main(String[] args) {\n    eq(Lib.next(\"Loading\", true), \"Ready\");\n  }\n}\n\n\nTask: Implement next so Loading goes to Ready on success and Error on failure, and every other state stays put."
+    },
+    {
+     "role": "assistant",
+     "content": "Lib.java\n<<<<<<< SEARCH\n    return state;\n=======\n    if (!state.equals(\"Loading\")) return state;\n    return ok ? \"Ready\" : \"Error\";\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "android-exported",
+   "project": "android",
+   "task_family": "manifest-exported",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: android\n\nFiles:\n--- AndroidManifest.xml\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n  <application android:label=\"Sample\">\n    <activity android:name=\".MainActivity\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\" />\n        <category android:name=\"android.intent.category.LAUNCHER\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n\n--- test_visible.py\nimport unittest\nimport xml.etree.ElementTree as ET\nA='{http://schemas.android.com/apk/res/android}'\nroot=ET.parse('AndroidManifest.xml').getroot()\nclass T(unittest.TestCase):\n    def test_parse(self): self.assertEqual(root.tag, 'manifest')\n\n\nTask: The app fails to install on Android 12 because MainActivity has an intent-filter without android:exported. Make it launchable."
+    },
+    {
+     "role": "assistant",
+     "content": "AndroidManifest.xml\n<<<<<<< SEARCH\n    <activity android:name=\".MainActivity\">\n=======\n    <activity android:name=\".MainActivity\" android:exported=\"true\">\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "android-permission",
+   "project": "android",
+   "task_family": "manifest-permission",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: android\n\nFiles:\n--- AndroidManifest.xml\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n  <application android:label=\"Sample\">\n    <activity android:name=\".MainActivity\" />\n  </application>\n</manifest>\n\n--- test_visible.py\nimport unittest\nimport xml.etree.ElementTree as ET\nA='{http://schemas.android.com/apk/res/android}'\nroot=ET.parse('AndroidManifest.xml').getroot()\nclass T(unittest.TestCase):\n    def test_parse(self): self.assertEqual(root.tag, 'manifest')\n\n\nTask: The app crashes on network calls. Declare the INTERNET permission."
+    },
+    {
+     "role": "assistant",
+     "content": "AndroidManifest.xml\n<<<<<<< SEARCH\n  <application android:label=\"Sample\">\n=======\n  <uses-permission android:name=\"android.permission.INTERNET\" />\n  <application android:label=\"Sample\">\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "ios-camera",
+   "project": "ios",
+   "task_family": "plist-privacy",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: ios\n\nFiles:\n--- Info.plist\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\">\n<dict>\n  <key>CFBundleIdentifier</key>\n  <string>dev.takumi.sample</string>\n  <key>CFBundleName</key>\n  <string>Sample</string>\n</dict>\n</plist>\n\n--- test_visible.py\nimport unittest, plistlib\ndata=plistlib.load(open('Info.plist','rb'))\nclass T(unittest.TestCase):\n    def test_parse(self): self.assertTrue(data['CFBundleName'])\n\n\nTask: The app is killed when it opens the camera. Add a camera usage description: \"Scan documents\"."
+    },
+    {
+     "role": "assistant",
+     "content": "Info.plist\n<<<<<<< SEARCH\n  <key>CFBundleName</key>\n=======\n  <key>NSCameraUsageDescription</key>\n  <string>Scan documents</string>\n  <key>CFBundleName</key>\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "ios-orientation",
+   "project": "ios",
+   "task_family": "plist-orientation",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: ios\n\nFiles:\n--- Info.plist\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\">\n<dict>\n  <key>CFBundleIdentifier</key>\n  <string>dev.takumi.sample</string>\n  <key>CFBundleName</key>\n  <string>Sample</string>\n</dict>\n</plist>\n\n--- test_visible.py\nimport unittest, plistlib\ndata=plistlib.load(open('Info.plist','rb'))\nclass T(unittest.TestCase):\n    def test_parse(self): self.assertTrue(data['CFBundleName'])\n\n\nTask: Lock the app to portrait: add UISupportedInterfaceOrientations with only UIInterfaceOrientationPortrait."
+    },
+    {
+     "role": "assistant",
+     "content": "Info.plist\n<<<<<<< SEARCH\n  <key>CFBundleName</key>\n=======\n  <key>UISupportedInterfaceOrientations</key>\n  <array>\n    <string>UIInterfaceOrientationPortrait</string>\n  </array>\n  <key>CFBundleName</key>\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "js-has",
+   "project": "web",
+   "task_family": "membership-guard",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: web\n\nFiles:\n--- app.mjs\nexport function has(value, key) {\n  return key in value;\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { has } from './app.mjs';\ntest('object', () => { assert.equal(has({ a: 1 }, 'a'), true); assert.equal(has({ a: 1 }, 'b'), false); });\n\n\nTask: has throws on numbers and strings. Return whether key is a member, and return false for null."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n  return key in value;\n=======\n  if (value == null) return false;\n  return key in Object(value);\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "py-channel",
+   "project": "python",
+   "task_family": "declared-identifier",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: python\n\nFiles:\n--- app.py\nCHANNEL = \"\"\n\n--- test_visible.py\nimport unittest\nfrom app import *\nclass T(unittest.TestCase):\n    def test_set(self): self.assertTrue(CHANNEL)\n\n\nTask: Set CHANNEL to the reverse-DNS id app.takumi.inbox."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\nCHANNEL = \"\"\n=======\nCHANNEL = \"app.takumi.inbox\"\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "ios-app-group",
+   "project": "ios",
+   "task_family": "declared-identifier",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: ios\n\nFiles:\n--- Info.plist\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\">\n<dict>\n  <key>CFBundleIdentifier</key>\n  <string>dev.takumi.sample</string>\n  <key>CFBundleName</key>\n  <string>Sample</string>\n</dict>\n</plist>\n\n--- test_visible.py\nimport unittest, plistlib\ndata=plistlib.load(open('Info.plist','rb'))\nclass T(unittest.TestCase):\n    def test_key(self): self.assertIn('AppGroupId', data)\n\n\nTask: Add the app group id group.dev.takumi.notes under the key AppGroupId."
+    },
+    {
+     "role": "assistant",
+     "content": "Info.plist\n<<<<<<< SEARCH\n  <key>CFBundleName</key>\n=======\n  <key>AppGroupId</key>\n  <string>group.dev.takumi.notes</string>\n  <key>CFBundleName</key>\n>>>>>>> REPLACE"
+    }
+   ]
+  },
+  {
+   "id": "js-has#repair",
+   "project": "web",
+   "task_family": "membership-guard",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: web\n\nFiles:\n--- app.mjs\nexport function has(value, key) {\n  if (value == null) return false;\n  return key in value;\n}\n\n--- visible.test.mjs\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { has } from './app.mjs';\ntest('object', () => { assert.equal(has({ a: 1 }, 'a'), true); assert.equal(has({ a: 1 }, 'b'), false); });\n\n\nTask: has throws on numbers and strings. Return whether key is a member, and return false for null."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n  return key in value;\n=======\n  if (value == null) return false;\n  return key in value;\n>>>>>>> REPLACE"
+    },
+    {
+     "role": "user",
+     "content": "The checks failed. Fix the first error, which is the cause. Do not weaken or delete tests.\n\nFirst failure first:\napp.mjs:2: The `in` operator throws on numbers and strings. Comparing `value` with null does not exclude them. Use `key in Object(value)`.\n\nWorked example, a different function: `key in value` throws on a number. Comparing value with null does not make it safe. Write `key in Object(value)`."
+    },
+    {
+     "role": "assistant",
+     "content": "app.mjs\n<<<<<<< SEARCH\n  return key in value;\n=======\n  return key in Object(value);\n>>>>>>> REPLACE"
+    }
+   ],
+   "turn": "repair"
+  },
+  {
+   "id": "py-channel#repair",
+   "project": "python",
+   "task_family": "declared-identifier",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: python\n\nFiles:\n--- app.py\nCHANNEL = \"inbox\"\n\n--- test_visible.py\nimport unittest\nfrom app import *\nclass T(unittest.TestCase):\n    def test_set(self): self.assertTrue(CHANNEL)\n\n\nTask: Set CHANNEL to the reverse-DNS id app.takumi.inbox."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\nCHANNEL = \"\"\n=======\nCHANNEL = \"inbox\"\n>>>>>>> REPLACE"
+    },
+    {
+     "role": "user",
+     "content": "The checks failed. Fix the first error, which is the cause. Do not weaken or delete tests.\n\nFirst failure first:\nThe task names \"app.takumi.inbox\" but no project file contains it.\n\nWorked example: the task named app.takumi.inbox and the edit wrote a shorter id. Copy the full reverse-DNS id from the task into the file, unchanged."
+    },
+    {
+     "role": "assistant",
+     "content": "app.py\n<<<<<<< SEARCH\nCHANNEL = \"inbox\"\n=======\nCHANNEL = \"app.takumi.inbox\"\n>>>>>>> REPLACE"
+    }
+   ],
+   "turn": "repair"
+  },
+  {
+   "id": "ios-app-group#repair",
+   "project": "ios",
+   "task_family": "declared-identifier",
+   "license": "MIT",
+   "messages": [
+    {
+     "role": "system",
+     "content": "You are Sumi, a careful software engineer working in a real project.\nChange only what the task needs. Follow the style of the surrounding code.\nReply with edits only, each in exactly this form:\n\npath/to/file.ext\n<<<<<<< SEARCH\nexact existing lines\n=======\nreplacement lines\n>>>>>>> REPLACE\n\nTo create a file, leave SEARCH empty. Copy SEARCH lines exactly from the file."
+    },
+    {
+     "role": "user",
+     "content": "Project type: ios\n\nFiles:\n--- Info.plist\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\">\n<dict>\n  <key>CFBundleIdentifier</key>\n  <string>dev.takumi.sample</string>\n  <key>AppGroupId</key>\n  <string>group.notes</string>\n  <key>CFBundleName</key>\n  <string>Sample</string>\n</dict>\n</plist>\n\n--- test_visible.py\nimport unittest, plistlib\ndata=plistlib.load(open('Info.plist','rb'))\nclass T(unittest.TestCase):\n    def test_key(self): self.assertIn('AppGroupId', data)\n\n\nTask: Add the app group id group.dev.takumi.notes under the key AppGroupId."
+    },
+    {
+     "role": "assistant",
+     "content": "Info.plist\n<<<<<<< SEARCH\n  <key>CFBundleName</key>\n=======\n  <key>AppGroupId</key>\n  <string>group.notes</string>\n  <key>CFBundleName</key>\n>>>>>>> REPLACE"
+    },
+    {
+     "role": "user",
+     "content": "The checks failed. Fix the first error, which is the cause. Do not weaken or delete tests.\n\nFirst failure first:\nThe task names \"group.dev.takumi.notes\" but no project file contains it.\n\nWorked example: the task named app.takumi.inbox and the edit wrote a shorter id. Copy the full reverse-DNS id from the task into the file, unchanged."
+    },
+    {
+     "role": "assistant",
+     "content": "Info.plist\n<<<<<<< SEARCH\n<string>group.notes</string>\n=======\n<string>group.dev.takumi.notes</string>\n>>>>>>> REPLACE"
+    }
+   ],
+   "turn": "repair"
+  }
+ ]
+}

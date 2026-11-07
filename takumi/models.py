@@ -1,6 +1,6 @@
 """Public Takumi model identities with accurate upstream attribution.
 
-Sumi 1.0 and Rei 1.0 are independently configurable inference profiles,
+Sumi 1.1 and Rei 1.1 are independently configurable inference profiles,
 not separately trained foundation models. Base model blobs are installed by the
 user's local runtime and are never included in Takumi distributions.
 """
@@ -10,10 +10,10 @@ import json
 from pathlib import Path
 
 MODEL_TAG = 'sumi-1.0:latest'
-NAME = 'Sumi 1.0'
+NAME = 'Sumi 1.1'
 UPSTREAM = 'bonsai-2:27b'
 REI_TAG = 'rei-1.0:latest'
-REI_NAME = 'Rei 1.0'
+REI_NAME = 'Rei 1.1'
 REI_UPSTREAM = 'bonsai-2:9b'
 # Older Takumi installs used this tag. Leave it usable; don't delete user models.
 LEGACY_LITE_TAG = 'sumi-1.0-lite:latest'
@@ -40,14 +40,43 @@ def is_sumi_lite(model_id: str) -> bool:
     return canonical_tag(model_id) == LEGACY_LITE_TAG
 
 
+# Names for weights that are installed beside Sumi and Rei. These are not Sumi or Rei.
+_KNOWN_LABELS = {
+    'bonsai-2:27b': 'Bonsai 27B',
+    'bonsai-2:9b': 'Bonsai 9B',
+    'bonsai2-local:latest': 'Bonsai local',
+}
+
+
 def display_name(model_id: str) -> str:
     if is_sumi(model_id):
         return NAME
     if is_rei(model_id):
         return REI_NAME
     if is_sumi_lite(model_id):
-        return 'Rei 1.0 (legacy local profile)'
-    return 'Local model' if model_id in (UPSTREAM, REI_UPSTREAM) else str(model_id)
+        return 'Rei 1.1 (legacy)'
+    tag = canonical_tag(model_id)
+    if tag in _KNOWN_LABELS:
+        return _KNOWN_LABELS[tag]
+    base = tag[:-7] if tag.endswith(':latest') else tag
+    base = ' '.join(base.replace(':', ' ').replace('_', ' ').replace('-', ' ').split())
+    return (base[:1].upper() + base[1:]) if base else 'Installed model'
+
+
+def model_note(model_id: str) -> str:
+    """One line for the model menu. Base weights are not described as Sumi or Rei."""
+    tag = canonical_tag(model_id)
+    if is_sumi(model_id):
+        return 'Full profile · recommended'
+    if is_rei(model_id):
+        return 'Lightweight profile'
+    if is_sumi_lite(model_id):
+        return 'Older lightweight profile'
+    if tag == canonical_tag(UPSTREAM):
+        return 'Base weights · not the Sumi profile'
+    if tag == canonical_tag(REI_UPSTREAM):
+        return 'Base weights · not the Rei profile'
+    return 'Installed on this PC'
 
 
 def catalog(installed: list[str]) -> list[dict]:
@@ -56,12 +85,18 @@ def catalog(installed: list[str]) -> list[dict]:
         if not isinstance(raw, str) or not raw:
             continue
         branded = is_sumi(raw) or is_rei(raw) or is_sumi_lite(raw)
-        rows.append({'id': raw, 'label': display_name(raw),
+        rows.append({'id': raw, 'label': display_name(raw), 'note': model_note(raw),
                      'sumi': is_sumi(raw), 'rei': is_rei(raw),
                      'model_class': 'Takumi engineering profile' if branded else 'Installed local model'})
     rows.sort(key=lambda item: (
         0 if item['sumi'] else 1 if item['rei'] else 2 if is_sumi_lite(item['id']) else 3,
         item['label'].casefold()))
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row['label']] = counts.get(row['label'], 0) + 1
+    for row in rows:
+        if counts[row['label']] > 1:
+            row['label'] = row['label'] + ' · ' + row['id']
     return rows
 
 
@@ -82,7 +117,7 @@ def rei_manifest() -> dict:
 
 
 def state(installed: list[str]) -> dict:
-    return {'name': NAME, 'version': '1.0',
+    return {'name': NAME, 'version': '1.1',
             'installed': any(is_sumi(x) for x in installed),
             'base_installed': UPSTREAM in installed,
             'installed_rei': any(is_rei(x) for x in installed),

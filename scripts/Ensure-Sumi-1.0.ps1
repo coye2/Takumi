@@ -54,7 +54,7 @@ function Use-LighterModelForHardware {
     try {
         $ram = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop).TotalPhysicalMemory
         if ($ram -and $ram -lt 24GB) {
-            Write-Warning 'This PC has less than 24 GB of RAM. Selecting Rei 1.0 to avoid excessive paging.'
+            Write-Warning 'This PC has less than 24 GB of RAM. Selecting Rei 1.1 to avoid excessive paging.'
             return $true
         }
     } catch { Write-Host 'System RAM detection unavailable; leaving full model selected.' }
@@ -68,7 +68,7 @@ function Use-LighterModelForHardware {
             $result = (& $smi.Source '--query-gpu=memory.total' '--format=csv,noheader,nounits' 2>$null | Select-Object -First 1)
             $match = [regex]::Match([string]$result, '\d+')
             if ($match.Success -and [int]$match.Value -lt 12000) {
-                Write-Warning 'This GPU has less than 12 GB of VRAM. Selecting Rei 1.0 rather than overcommitting memory.'
+                Write-Warning 'This GPU has less than 12 GB of VRAM. Selecting Rei 1.1 rather than overcommitting memory.'
                 return $true
             }
         } catch { Write-Host 'GPU memory detection unavailable; leaving full model selected.' }
@@ -169,9 +169,9 @@ function Install-CodingAgent {
 }
 $failed = $false
 try {
-    Step 'Sumi 1.0 · complete first-run provisioning'
+    Step 'Sumi 1.1 · complete first-run provisioning'
     Write-Host 'This installs official external dependencies ON THIS PC. No API subscription is required.'
-    Write-Host 'Model downloads: Sumi 1.0 approximately 8.3 GB, or Rei 1.0 approximately 3.2 GB on lower-memory PCs.'
+    Write-Host 'Model downloads: Sumi 1.1 approximately 8.3 GB, or Rei 1.1 approximately 3.2 GB on lower-memory PCs.'
     Write-Host "Setup log: $log"
     if ($CheckOnly) {
         $engine = Find-Ollama
@@ -180,10 +180,10 @@ try {
         if (-not (Is-ServerReady)) { throw 'Local inference service is not running.' }
         $available = @(Get-InstalledModelNames)
         if ($available -contains 'sumi-1.0:latest') {
-            Write-Host 'Sumi 1.0 is ready.' -ForegroundColor Green
+            Write-Host 'Sumi 1.1 is ready.' -ForegroundColor Green
         } elseif ($available -contains 'rei-1.0:latest') {
-            Write-Host 'Rei 1.0 is ready on this lower-memory PC.' -ForegroundColor Green
-        } else { throw 'Neither Sumi 1.0 nor Rei 1.0 is installed.' }
+            Write-Host 'Rei 1.1 is ready on this lower-memory PC.' -ForegroundColor Green
+        } else { throw 'Neither Sumi 1.1 nor Rei 1.1 is installed.' }
     } else {
         $engine = Find-Ollama
         if (-not $engine) {
@@ -226,12 +226,12 @@ try {
             Step 'Registering the selected Takumi model (shared upstream weights)'
             if ($PreferSmallModel) {
                 $modelfile = Join-Path $root 'models\Rei-1.0.Modelfile'
-                if (-not (Test-Path -LiteralPath $modelfile)) { throw 'Rei 1.0 profile is missing from this installation.' }
+                if (-not (Test-Path -LiteralPath $modelfile)) { throw 'Rei 1.1 profile is missing from this installation.' }
                 & $engine create 'rei-1.0' -f $modelfile
-                if ($LASTEXITCODE -ne 0) { throw 'Rei 1.0 registration failed.' }
+                if ($LASTEXITCODE -ne 0) { throw 'Rei 1.1 registration failed.' }
             } else {
                 & $engine create 'sumi-1.0' -f $modelfile
-                if ($LASTEXITCODE -ne 0) { throw 'Sumi 1.0 registration failed.' }
+                if ($LASTEXITCODE -ne 0) { throw 'Sumi 1.1 registration failed.' }
             }
         }
         $available = @(Get-InstalledModelNames)

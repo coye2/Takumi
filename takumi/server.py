@@ -25,13 +25,16 @@ from .intelligence import LocalMemory, profile_for, safe_temperature, guard_new_
 from .remote import Pairing, remote_mode_enabled
 from .remote import connection_status, keep_phone_service_awake
 from .trainer import Trainer
+from .forge_bridge import status as forge_status
+from .vibe.manager import VibeManager
+from .vibe.scaffold import create as create_scaffold
 from .companion import Companion, BotSupervisor, connections_status
 from .kage import KageManager, context as kage_context
 from .desktop_controls import ProcessSupervisor
 from .oauth import initiate_sign_in
 from .research import research as conduct_research, should_research, context as research_context, public_query, EvidenceCache
 from .github_reader import requested_repository
-from .core import ANSWER_STYLE_GUIDANCE
+from .core import ANSWER_STYLE_GUIDANCE, time_context
 from .repository_review import collect_repository_review
 from .plugins import Approvals, status as plugin_status
 from .harness import Harness, completion_contract
@@ -39,20 +42,23 @@ from .completion import verify_completion
 from .source_miner import map_repository, inspect_file
 from .expertise import catalogue as expertise_catalogue, retrieve as retrieve_expertise, ReviewedLessons, VERSION as EXPERTISE_VERSION
 from .models import catalog as model_catalog, state as sumi_state, register_sumi, register_rei, default_model
+from .model_library import library_catalog
+from .prompting import compose_turn, normalize_attachments, prepare_model_history
 from .provisioning import Provisioner, start_installed_engine_if_needed
 from .profiles import ProfileManager, DiscordOAuth
 from .search_connectors import key_status, set_key
 from .profile_archive import export_profile, import_profile
 from .grounding import project_facts, research_correction
-from .routing import choose_mode
+from .routing import choose_mode, project_preflight
 from .code_quality import validate_generated_code, should_repair_html, engineering_repair_prompt, accept_engineering_repair
 from .source_index import SourceIndex
 from .format_memory import FormatMemory
 from .evidence import response_contract, audit_answer, structure_report
-from .language import resolve_language, model_instruction
+from .language import resolve_language, model_instruction, supported_codes, language_menu
 from .engineering_tools import inventory as engineering_inventory, inspect_binary, symbol_search, validate_spirv, disassemble_spirv, analyze_ghidra
 from .gpu_scheduler import GpuScheduler
 from .updater import UpdateManager
+from .host_diagnostics import host_readiness
 from .runs import RunJournal, TERMINAL, data_directory_lease
 from .runtime_inventory import inventory as runtime_inventory
 from .goals import Goals
@@ -209,10 +215,11 @@ class Runtime:
         self.bots = BotSupervisor(self.store, self.companion)
         self.processes = ProcessSupervisor(self.store)
         self.gpu_scheduler = GpuScheduler(
-            is_model_busy=lambda: bool(self.busy) or getattr(self, "_kage_inference", False),
+            is_model_busy=lambda: bool(self.busy) or getattr(self, "_kage_inference", False) or (hasattr(self, "vibe") and self.vibe.is_busy()),
             unload=self._unload_models_for_gpu_test)
         self.harness = Harness(self.store, gpu_scheduler=self.gpu_scheduler)
         self.trainer = Trainer(self.store.base, ROOT, self.gpu_scheduler)
+        self.vibe = VibeManager(self.store.base, self.gpu_scheduler, source_index=self.source_index)
         self.updater = UpdateManager(self.store.base, APP_VERSION)
         self.provisioner = Provisioner(ROOT)
         self.profiles = ProfileManager(self.store.base)
@@ -226,7 +233,7 @@ class Runtime:
         self.research_cache: dict[str, tuple[float, dict]] = {}
         self.evidence_cache = EvidenceCache(self.store.base / "research-cache.json")
         self.settings_path = self.store.base / "settings.json"
-        self.settings = {"figma_enabled": False, "personality": "precise",
+        self.settings = {"figma_enabled": False, "forge_enabled": False, "browser_enabled": False, "personality": "precise",
                          "theme": "porcelain", "speed": "standard", "effort": "balanced",
                          "refine_reports": False, "autonomy_passes": 8,
                          "research_mode": "auto", "github_research": True,
@@ -271,7 +278,7 @@ class Runtime:
                       "If evidence is missing, say so. Do not claim tests, changes or online checks occurred "
                       "unless the evidence proves they did. No tool use is available in this call.")
             payload = {"model": model, "stream": False,
-                       "messages": [{"role": "system", "content": kage_context(member) + "\n" + prompt + ANSWER_STYLE_GUIDANCE},
+                       "messages": [{"role": "system", "content": kage_context(member) + "\n" + prompt + time_context() + ANSWER_STYLE_GUIDANCE},
                                     {"role": "user", "content": "Task: " + title[:100] + "\nEvidence:\n" + evidence[:1800]}],
                        "options": {"num_ctx": 4096, "num_predict": 400, "temperature": 0.15}}
             result = json_request("/api/chat", payload, timeout=65)
@@ -284,17 +291,17 @@ class Runtime:
                 self._kage_inference = False
 
     def update_settings(self, body: dict):
-        allowed = {"figma_enabled": [False, True], "browser_enabled": [False, True], "refine_reports": [False, True],
+        allowed = {"figma_enabled": [False, True], "forge_enabled": [False, True], "browser_enabled": [False, True], "refine_reports": [False, True],
                    "autonomy_passes": [4, 8, 12],
                    "personality": ["precise", "friendly", "technical", "concise", "craftsman"],
                    "theme": ["porcelain", "sumi", "sakura", "matcha", "indigo", "midnight",
                              "washi", "kintsugi", "ume", "yoru", "kyoto", "moss", "sora", "akane", "zen",
-                             "beni", "shinku", "shu", "botan", "tsuki", "ruri", "sage"],
+                             "beni", "shinku", "shu", "botan", "tsuki", "ruri", "sage", "asagi", "fuji", "momiji", "yuzu", "take", "mizu", "kinari", "kohaku", "murasaki", "toki", "moegi", "gin", "chawan", "yanagi", "wakatake", "usuzumi", "ao", "enji", "suzu", "kakishibu", "hanada", "kujaku", "komugi", "shirayuki", "nuri", "tetsu", "kurocha", "nezumi", "fukamidori", "konpeki", "budou", "akatsuki", "roiro", "kachi", "miru", "susutake", "namari", "enkai", "karasuba", "sumizome", "benibana", "yamabuki", "rikyunezu", "soba", "ember", "dusk", "slate", "crimson", "leaf", "lilac", "blaze", "harbor", "violet", "forest", "tide", "blossom", "azure", "moon"],
                    "speed": ["standard", "boost"],
                    "effort": ["quick", "balanced", "high", "maximum"],
                    "research_mode": ["auto", "always", "off"],
                    "github_research": [False, True], "model_failover": [False, True],
-                   "language": ["auto", "en", "it"],
+                   "language": supported_codes(),
                    "show_progress": [False, True], "show_citations": [False, True],
                    "verify_generated_code": [False, True], "repair_generated_html": [False, True], "repair_generated_code": [False, True],
                    "send_on_enter": [False, True], "voice_output": [False, True]}
@@ -475,12 +482,27 @@ def handler_factory(runtime: Runtime):
 
         def _fail(self, status, error):
             # These are application/environment preflight failures, not model refusals.
+            self._drain_body()
             self._json(status, {"error": str(error), "source": "application"})
+
+        def _drain_body(self, limit=1_000_000):
+            # Answering before the request body is read makes Windows reset the
+            # connection, so the client sees an abort instead of the status.
+            if self.command != "POST" or getattr(self, "_body_read", False):
+                return
+            self._body_read = True
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if 0 < length <= limit:
+                    self.rfile.read(length)
+            except (ValueError, OSError):
+                pass
 
         def _read(self, max_bytes=40000):
             length = int(self.headers.get("Content-Length", "0"))
             if length < 1 or length > max_bytes:
                 raise ValueError("Invalid request size.")
+            self._body_read = True
             parsed = json.loads(self.rfile.read(length))
             if not isinstance(parsed, dict):
                 raise ValueError("Request must be a JSON object.")
@@ -569,6 +591,9 @@ def handler_factory(runtime: Runtime):
                     "active_project": runtime.store.data["active_project"],
                     "sessions": [{"id": s["id"], "title": s["title"], "project_id": s.get("project_id"), "updated": s.get("updated", 0)} for s in runtime.store.data["sessions"]],
                     "models": found_models, "model_catalog": model_catalog(found_models),
+                    "library": library_catalog(found_models),
+                    "cline_installed": shutil.which("cline") is not None,
+                    "languages": language_menu(),
                     "sumi": sumi_state(found_models), "agentInstalled": bool(open_code_path()),
                     "busy": list(runtime.busy.keys()), "settings": runtime.settings,
                     "remote": self._remote(), "profile": runtime.profiles.current(),
@@ -617,6 +642,23 @@ def handler_factory(runtime: Runtime):
                 return self._json(200, {"text": runtime.bots.tail(route.rsplit("/", 1)[-1])})
             if route == "/api/plugins":
                 return self._json(200, {"plugins": plugin_status(runtime.settings)})
+            if route == "/api/host/readiness":
+                # Paired iPhone sessions can inspect their own authenticated PC.
+                # No input becomes a command. Local calls also require the token.
+                if not self._api_token_ok():
+                    return self._fail(403, "Host diagnostics require the workspace token")
+                active = runtime.store.get_project(runtime.store.data.get("active_project"))
+                project_root = Path(active["path"]) if active else None
+                return self._json(200, host_readiness(project_root))
+            if route == "/api/vibe":
+                return self._json(200, runtime.vibe.status())
+            if route == "/api/vibe/forge":
+                return self._json(200, forge_status())
+            if route.startswith("/api/vibe/plan/"):
+                project = runtime.store.get_project(route.rsplit("/", 1)[-1])
+                if not project:
+                    return self._fail(404, "Choose a project first")
+                return self._json(200, runtime.vibe.plan(Path(project["path"])))
             if route == "/api/harness":
                 return self._json(200, {"runs": runtime.harness.inspect()})
             if route.startswith("/api/harness/tasks/"):
@@ -675,7 +717,7 @@ def handler_factory(runtime: Runtime):
             if not self._api_token_ok():
                 return self._fail(403, "Workspace authorization required.")
             try:
-                body = self._read(4_000_000 if route == "/api/kage/avatar/import" else 1_000_000 if route == "/api/profile/import" else 40000)
+                body = self._read(6_000_000 if route == "/api/run" else 4_000_000 if route == "/api/kage/avatar/import" else 1_000_000 if route == "/api/profile/import" else 40000)
                 if route.startswith('/api/training/'):
                     if self._remote():
                         return self._fail(403, 'Control training from the Windows PC')
@@ -709,6 +751,11 @@ def handler_factory(runtime: Runtime):
                     provider = str(body.get("provider", ""))
                     return self._json(200, set_key(runtime.store.base, provider, str(body.get("key", "")),
                                                     google_enabled=body.get("google_enabled") if provider=="google" else None))
+                if route == '/api/project/preflight':
+                    pid = body.get('project_id')
+                    if pid and not runtime.store.get_project(pid):
+                        raise ValueError('Unknown selected project')
+                    return self._json(200, project_preflight(body.get('mode', 'auto'), body.get('prompt', ''), bool(pid)))
                 if route == "/api/projects":
                     project = runtime.store.register_project(str(body.get("path", "")))
                     return self._json(200, {"project": project})
@@ -910,6 +957,42 @@ def handler_factory(runtime: Runtime):
                             raise ValueError("Finish the active model or GPU work before analyzing")
                         return self._json(200, analyze_ghidra(project_root, str(body.get("path", ""))))
                     raise ValueError("Unsupported engineering analysis operation")
+                if route == "/api/vibe/start":
+                    project = runtime.store.get_project(str(body.get("project_id", "")))
+                    if not project:
+                        return self._fail(404, "Choose a project first")
+                    allow_config = body.get("allow_config") is True
+                    if allow_config and self._remote():
+                        return self._fail(403, "Allow build configuration edits from the PC")
+                    session_id = str(body.get("session_id") or "")
+                    task = str(body.get("task", ""))
+
+                    def listen(event, sid=session_id):
+                        if sid and event.get("name"):
+                            runtime.store.add_event(sid, {"kind": event["name"], "title": str(event.get("title", ""))[:180],
+                                                          "status": event["name"], "detail": str(event.get("detail") or event.get("state") or "")[:500]})
+
+                    def finished(report, sid=session_id, text=task):
+                        if not sid:
+                            return
+                        runtime.store.add_message(sid, "user", text, origin="verified_build")
+                        runtime.store.add_message(sid, "assistant", str(report.get("detail") or report.get("state") or ""),
+                                                  origin="verified_build", verification=report.get("verification") or {})
+
+                    return self._json(202, runtime.vibe.start(Path(project["path"]), task,
+                                                              model=str(body.get("model") or "sumi-1.0:latest"), allow_config=allow_config,
+                                                              listen=listen if session_id else None,
+                                                              on_finished=finished if session_id else None))
+                if route == "/api/vibe/stop":
+                    return self._json(200, runtime.vibe.stop())
+                if route == "/api/vibe/scaffold":
+                    if self._remote():
+                        return self._fail(403, "Create projects from the PC")
+                    folder = Path(str(body.get("path", "")).strip()).expanduser()
+                    if not folder.is_absolute():
+                        return self._fail(400, "Use a full folder path")
+                    files = create_scaffold(str(body.get("platform", "")), folder)
+                    return self._json(200, {"files": files, "project": runtime.store.register_project(str(folder))})
                 if route == "/api/harness/run":
                     return self._json(200, {"run": runtime.harness.launch(
                         str(body.get("project_id", "")), str(body.get("task_id", "")))})
@@ -942,6 +1025,21 @@ def handler_factory(runtime: Runtime):
                     return self._json(202, runtime.provisioner.start(
                         lightweight=body.get("lightweight", False),
                         skip_coding_agent=body.get("skip_coding_agent", False)))
+                if route == "/api/models/install":
+                    if self._remote():
+                        return self._fail(403, "Install models from the Windows desktop, not from a remote device.")
+                    if runtime.busy:
+                        raise ValueError("Finish or stop the active task before installing a model")
+                    tag = body.get("tag")
+                    if not isinstance(tag, str):
+                        raise ValueError("Choose a model from the install list")
+                    return self._json(202, runtime.provisioner.install_library(tag))
+                if route == "/api/tools/cline/install":
+                    if self._remote():
+                        return self._fail(403, "Install Cline from the Windows desktop, not from a remote device.")
+                    if runtime.busy:
+                        raise ValueError("Finish or stop the active task before installing Cline")
+                    return self._json(202, runtime.provisioner.install_cline())
                 if route == "/api/models/register":
                     if self._remote():
                         return self._fail(403, "Set up models from your Windows PC")
@@ -1063,6 +1161,9 @@ def handler_factory(runtime: Runtime):
                     return self._stream_run(existing['id']) if subscribe else existing
             sid = str(payload.get("session_id", ""))
             prompt = str(payload.get("prompt", "")).strip()
+            attachments = normalize_attachments(payload.get("attachments"))
+            if not prompt and attachments:
+                prompt = "Look at the attached evidence."
             mode = payload.get("mode", "chat")
             model = str(payload.get("model", ""))
             level = payload.get("reasoning", "default")
@@ -1111,7 +1212,10 @@ def handler_factory(runtime: Runtime):
                     goal_seconds, goal_deadline = seconds, deadline
                     contract = completion_contract(Path(project['path']))
                 mode = 'agent'
-            mode = choose_mode(mode, prompt, bool(project))
+            preflight = project_preflight(mode, prompt, bool(project))
+            if preflight['needs_project']:
+                raise ValueError('Choose the project folder to edit, then send your request again. Your files have not been changed.')
+            mode = preflight['mode']
             if level is not None and not isinstance(level, (str, bool)):
                 raise ValueError("Invalid reasoning level.")
             if mode == "chat" and model not in installed_models():
@@ -1142,7 +1246,13 @@ def handler_factory(runtime: Runtime):
                                 goal['completion_contract'] = contract
                             runtime.goals.checkpoint(goal, state='running', run_id=run['id'],
                                                      native_session=session.get('open_code_session'))
-                        runtime.store.add_message(sid, "user", prompt, mode=mode, run_id=run['id'])
+                        message_extra = {}
+                        if attachments:
+                            has_image = any(item['kind'] == 'image' for item in attachments)
+                            attachment_vision = has_image and reasoning_profile(model).get('vision') is True
+                            message_extra['evidence_prompt'] = compose_turn(prompt, attachments, vision=attachment_vision)['text']
+                            message_extra['attached'] = [{'name': item['name'], 'kind': item['kind']} for item in attachments]
+                        runtime.store.add_message(sid, "user", prompt, mode=mode, run_id=run['id'], **message_extra)
                     except Exception:
                         if 'run' in locals():
                             runtime.runs.append(run['id'], {'type': 'error', 'message': 'Run preparation failed'},
@@ -1188,6 +1298,7 @@ def handler_factory(runtime: Runtime):
                 total_generation_ns = 0
                 generation_attempts = 0
                 answer = ""
+                reasoning_text = ""
                 original = ""
                 polished = False
                 status = None
@@ -1283,11 +1394,17 @@ def handler_factory(runtime: Runtime):
                                     (m.get('mode') != 'live_update' or m.get('input_id') in accepted_inputs)]
                         # History is deliberately compact under boost; auto-trimming
                         # a giant conversation improves time-to-first-token and VRAM.
-                        history = [{"role": m["role"], "content": m['content'] if m.get('code_repaired') else m.get("original") or m["content"]} for m in previous]
+                        history = [{"role": m["role"], "content": m["evidence_prompt"] if m.get("role") == "user" and m.get("evidence_prompt") else m['content'] if m.get('code_repaired') else m.get("original") or m["content"]} for m in previous]
                         history = history[-(8 if speed == "boost" else 22):]
                         max_history_chars = 18000 if speed == "boost" else 65000
                         while len(json.dumps(history)) > max_history_chars and len(history) > 2:
                             history.pop(0)
+                        if attachments:
+                            has_image = any(item['kind'] == 'image' for item in attachments)
+                            attachment_vision = has_image and reasoning_profile(model).get('vision') is True
+                            prepare_model_history(history, prompt, attachments, vision=attachment_vision)
+                            if has_image and not attachment_vision:
+                                emit({"type": "notice", "message": "This model has not advertised vision. Measured image size was included; the pixels were not sent."})
                         import inspect
                         stream_kwargs = {}
                         if "speed" in inspect.signature(ui_event_stream).parameters:
@@ -1311,6 +1428,8 @@ def handler_factory(runtime: Runtime):
                                 used_model = item.get("model", model)
                             if item.get("type") == "delta":
                                 answer += item.get("text", "")
+                            elif item.get("type") == "reasoning" and isinstance(item.get("text"), str):
+                                reasoning_text = (reasoning_text + item["text"])[-32000:]
                             emit(item)
                         # Users can add instructions without terminating a streaming reply.
                         # Each follow-up is a separate local-model call in the SAME
@@ -1335,6 +1454,8 @@ def handler_factory(runtime: Runtime):
                                     if not supplement:
                                         emit({'type':'delta','text':'\n\n'})
                                     supplement += item.get('text', '')
+                                elif item.get('type') == 'reasoning' and isinstance(item.get('text'), str):
+                                    reasoning_text = (reasoning_text + item['text'])[-32000:]
                                 elif item.get('type') == 'model_used':
                                     used_model = item.get('model', used_model)
                                 emit(item)
@@ -1360,7 +1481,9 @@ def handler_factory(runtime: Runtime):
                                             used_model, repair_level, cancel, **stream_kwargs):
                                         repair_event = measure(repair_event, visible=False)
                                         if repair_event['type'] == 'delta': corrected += repair_event.get('text', '')
-                                        elif repair_event['type'] in ('metrics', 'reasoning_activity', 'cancelled'):
+                                        elif repair_event['type'] in ('metrics', 'reasoning', 'reasoning_activity', 'cancelled'):
+                                            if repair_event['type'] == 'reasoning' and isinstance(repair_event.get('text'), str):
+                                                reasoning_text = (reasoning_text + repair_event['text'])[-32000:]
                                             emit({**repair_event, 'purpose': 'syntax_repair'})
                                     checked = validate_generated_code(corrected, cancel=cancel, prompt=prompt)
                                     if not cancel.is_set() and accept_engineering_repair(answer, corrected, checked):
@@ -1450,6 +1573,8 @@ def handler_factory(runtime: Runtime):
                                 agent_kwargs["context_tokens"] = profile.context
                             if "figma_enabled" in params:
                                 agent_kwargs["figma_enabled"] = runtime.settings.get("figma_enabled") is True
+                            if "forge_enabled" in params:
+                                agent_kwargs["forge_enabled"] = runtime.settings.get("forge_enabled") is True
                             if "browser_enabled" in params:
                                 agent_kwargs["browser_enabled"] = runtime.settings.get("browser_enabled") is True
                             if "web_enabled" in params:
@@ -1474,6 +1599,10 @@ def handler_factory(runtime: Runtime):
                                 if et == "delta":
                                     cycle_answer += item.get("text", "")
                                     emit(item)
+                                elif et == "reasoning":
+                                    if isinstance(item.get("text"), str):
+                                        reasoning_text = (reasoning_text + item["text"])[-32000:]
+                                    emit(item)
                                 elif et == "agent_session":
                                     native_session = item.get("id")
                                     with runtime.store.lock:
@@ -1490,7 +1619,11 @@ def handler_factory(runtime: Runtime):
                                     emit(item)
                                 elif et == "agent_failure":
                                     answer = cycle_answer or item.get('text', '')
-                                    raise RuntimeError(f"OpenCode returned exit code {item.get('code')}. See the activity log.")
+                                    # Show a constrained category; do not leak raw CLI stderr
+                                    # or confuse process exit with a completed PowerShell task.
+                                    reason = str(item.get("reason") or
+                                        "The coding engine failed without confirmed command results.")[:400]
+                                    raise RuntimeError(f"OpenCode exited with code {item.get('code')}. {reason}")
                                 else:
                                     emit(item)
                             if failed or cancel.is_set():
@@ -1607,7 +1740,8 @@ def handler_factory(runtime: Runtime):
                                               research_note=correction,
                                               kage_member=kage_member, model_used=used_model if mode == "chat" else model,
                                               code_validation=code_validation, initial_code_validation=initial_code_validation,
-                                              code_repaired=code_repaired, evidence=evidence_report)
+                                              code_repaired=code_repaired, evidence=evidence_report,
+                                              reasoning=reasoning_text)
                     emit({"type": "done", "text": answer, "original": original, "polished": polished,
                                 "evidence": evidence_report,
                                 "completion_verification": completion_verification,
@@ -1617,7 +1751,8 @@ def handler_factory(runtime: Runtime):
                                 "research_freshness": (research_data or {}).get("freshness", "none"),
                                 "research_note": correction,
                                 "kage_member": kage_member, "model_used": used_model if mode == "chat" else model,
-                                "code_validation": code_validation, "initial_code_validation": initial_code_validation, "code_repaired": code_repaired})
+                                "code_validation": code_validation, "initial_code_validation": initial_code_validation, "code_repaired": code_repaired,
+                                "reasoning": reasoning_text})
                 except Exception as exc:
                     # Preserve visible text even on a provider/validation failure.
                     partial = answer or locals().get('cycle_answer', '')
@@ -1721,3 +1856,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

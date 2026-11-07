@@ -11,12 +11,6 @@ $outputRoot = Join-Path $root 'dist'
 $output = Join-Path $outputRoot ('Takumi-' + $Runtime)
 $staging = Join-Path $outputRoot ('.takumi-building-' + [guid]::NewGuid().ToString('N'))
 $backup = Join-Path $outputRoot ('.takumi-previous-' + [guid]::NewGuid().ToString('N'))
-$allowedBuildRoot = [IO.Path]::GetFullPath($outputRoot).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-foreach ($targetPath in @($output, $staging, $backup)) {
-    if (-not [IO.Path]::GetFullPath($targetPath).StartsWith($allowedBuildRoot, [StringComparison]::OrdinalIgnoreCase)) {
-        throw 'Build output must stay inside the checkout dist directory.'
-    }
-}
 if (-not (Test-Path -LiteralPath $project)) { throw "Missing C# project: $project. Extract the full ZIP." }
 if (-not (Get-Command $DotnetExe -ErrorAction SilentlyContinue) -and -not (Test-Path -LiteralPath $DotnetExe)) {
     throw 'The .NET 10 SDK was not found. Install it from Microsoft and rerun the installer.'
@@ -25,6 +19,12 @@ New-Item -ItemType Directory -Force -Path $outputRoot | Out-Null
 $env:DOTNET_NOLOGO = '1'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
+$allowedBuildRoot = [IO.Path]::GetFullPath($outputRoot).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+foreach ($targetPath in @($output, $staging, $backup)) {
+    if (-not [IO.Path]::GetFullPath($targetPath).StartsWith($allowedBuildRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Build output must stay inside the checkout dist directory.'
+    }
+}
 $createdBackup = $false
 try {
     Write-Host 'Building native Takumi.exe with .NET...' -ForegroundColor Cyan

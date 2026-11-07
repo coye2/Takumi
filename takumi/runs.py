@@ -14,7 +14,7 @@ from pathlib import Path
 TERMINAL = frozenset(('completed', 'failed', 'stopped', 'blocked', 'outcome_unknown'))
 EVENT_TYPES = {
     'start': 'run.started', 'delta': 'answer.delta', 'activity': 'item.updated',
-    'reasoning_activity': 'activity.updated', 'progress': 'activity.updated',
+    'reasoning_activity': 'activity.updated', 'reasoning': 'activity.updated', 'progress': 'activity.updated',
     'metrics': 'usage.updated', 'code_validation': 'test.result',
     'stop_requested': 'stop.acknowledged', 'input_queued': 'input.queued',
     'input_accepted': 'input.accepted', 'recovery': 'recovery.required',
@@ -155,7 +155,7 @@ class RunJournal:
     def activity(self, run_id):
         with self.lock, self.connect() as db:
             rows = db.execute("SELECT event FROM events WHERE run_id=? AND "
-                "json_extract(event, '$.payload.type') NOT IN ('delta','reasoning_activity','done') "
+                "json_extract(event, '$.payload.type') NOT IN ('delta','reasoning_activity','reasoning','done') "
                 "ORDER BY seq DESC LIMIT 80", (run_id,)).fetchall()
         return [json.loads(row['event']) for row in reversed(rows)]
 

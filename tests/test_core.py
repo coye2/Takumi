@@ -55,6 +55,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual(result['title'], 'Inspect repository changes')
         self.assertEqual(result['detail'], 'git status --short')
         self.assertIn('app.py', result['output'])
+        self.assertEqual(result['name'], 'tool_completed')
 
     def test_final_marker(self):
         self.assertEqual(core.strip_status('Real evidence.\nTAKUMI_STATUS: CONTINUE'), ('Real evidence.', 'CONTINUE'))

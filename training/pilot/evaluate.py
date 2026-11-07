@@ -5,15 +5,23 @@ from pathlib import Path
 import time
 
 
-def score(model, tokenizer, out, label):
+def score(model, tokenizer, out, label, suite='verified-coding-pilot-v1'):
+    if suite == 'vibe-coding-v1':
+        from training.vibe.mlx_eval import score as vibe_score
+        return vibe_score(model, tokenizer, out, label)
     import mlx.core as mx
     from training.bonsai.smoke import evaluated_layers
     from .fixtures import TASKS, prompt, verify
     validator = Path(__file__).with_name('fixtures.py')
+    if suite == 'verified-specialist-pilot-v1':
+        from .specialist import TASKS, verify
+        validator = Path(__file__).with_name('specialist.py')
+    elif suite != 'verified-coding-pilot-v1':
+        raise ValueError('Unknown evaluation suite')
     validator_sha = hashlib.sha256(validator.read_bytes()).hexdigest()
     report = {'label':label, 'decoding':'greedy', 'max_generated_tokens':96,
               'validator_sha256':validator_sha, 'split':'test', 'tasks':[],
-              'qualification':'Four synthetic held-out tasks; no frontier or whole-project claim'}
+              'suite':suite, 'qualification':'Synthetic held-out microtasks; no frontier or whole-project claim'}
     for task in TASKS:
         if task[1] != 'test':
             continue
@@ -52,3 +60,4 @@ def score(model, tokenizer, out, label):
     report['total']=len(report['tasks'])
     (Path(out)/f'heldout-{label}.json').write_text(json.dumps(report,indent=2))
     return {'passed':report['passed'],'total':report['total'],'validator_sha256':validator_sha}
+

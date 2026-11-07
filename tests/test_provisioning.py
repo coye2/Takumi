@@ -80,8 +80,8 @@ class ProvisioningTests(unittest.TestCase):
     def test_model_catalog_uses_rei_identity_with_legacy_compatibility(self):
         values = ['rei-1.0:latest', 'sumi-1.0-lite:latest', 'bonsai-2:9b']
         self.assertEqual(models.default_model(values), 'rei-1.0:latest')
-        self.assertEqual(models.display_name('rei-1.0:latest'), 'Rei 1.0')
-        self.assertEqual(models.display_name('sumi-1.0-lite:latest'), 'Rei 1.0 (legacy local profile)')
+        self.assertEqual(models.display_name('rei-1.0:latest'), 'Rei 1.1')
+        self.assertEqual(models.display_name('sumi-1.0-lite:latest'), 'Rei 1.1 (legacy)')
         status = models.state(values)
         self.assertFalse(status['installed'])
         self.assertTrue(status['installed_rei'])
@@ -126,6 +126,46 @@ class ProvisioningTests(unittest.TestCase):
         self.assertIn('Ensure-Sumi-1.0.ps1', setup)
         self.assertIn('pause', setup.lower())
         self.assertIn('pause', repair.lower())
+
+
+    def test_qwen_install_pulls_only_the_allowlisted_tag(self):
+        from takumi.model_library import library_catalog
+        rows = {row['id']: row for row in library_catalog(['qwen3:8b', 'sumi-1.0:latest'])}
+        self.assertTrue(rows['qwen3:8b']['installed'])
+        self.assertFalse(rows['qwen3:4b']['installed'])
+        self.assertNotIn('Sumi', rows['qwen3:8b']['label'])
+        p = Provisioner(ROOT, platform='nt', executable='powershell.exe')
+        with mock.patch('takumi.provisioning.subprocess.Popen') as launch:
+            with self.assertRaisesRegex(ValueError, 'install list'):
+                p.install_library('qwen3:8b; calc.exe', engine='ollama')
+            launch.assert_not_called()
+        with mock.patch('takumi.provisioning.subprocess.Popen', return_value=FakeChild('pulling manifest\n')) as launch:
+            p.install_library('qwen3:8b', engine='ollama')
+            for _ in range(100):
+                if p.status()['state'] == 'ready':
+                    break
+                time.sleep(.005)
+            self.assertEqual(p.status()['state'], 'ready')
+            self.assertEqual(launch.call_args.args[0], ['ollama', 'pull', 'qwen3:8b'])
+            self.assertFalse(launch.call_args.kwargs.get('shell', False))
+            self.assertIn('does not change Sumi', p.status()['messages'][0])
+
+    def test_cline_install_is_the_npm_package_and_does_not_run_without_npm(self):
+        p = Provisioner(ROOT, platform='nt', executable='powershell.exe')
+        with mock.patch('takumi.provisioning.shutil.which', return_value=None), \
+             mock.patch('takumi.provisioning.subprocess.Popen') as launch:
+            with self.assertRaisesRegex(RuntimeError, 'npm'):
+                p.install_cline()
+            launch.assert_not_called()
+        with mock.patch('takumi.provisioning.subprocess.Popen', return_value=FakeChild('added 1 package\n')) as launch:
+            p.install_cline(npm='npm')
+            for _ in range(100):
+                if p.status()['state'] == 'ready':
+                    break
+                time.sleep(.005)
+            self.assertEqual(launch.call_args.args[0], ['npm', 'install', '-g', 'cline'])
+            self.assertFalse(launch.call_args.kwargs.get('shell', False))
+            self.assertTrue(any('cline auth' in line for line in p.status()['messages']))
 
 
 class SetupHttpTests(unittest.TestCase):
@@ -173,6 +213,16 @@ class SetupHttpTests(unittest.TestCase):
             time.sleep(.005)
         self.assertEqual(st['state'], 'ready')
         self.assertEqual(st['exit_code'], 0)
+
+    def test_unknown_library_model_is_refused(self):
+        with self.assertRaises(urllib.error.HTTPError) as err:
+            self.req('/api/models/install', {'tag': 'qwen3:72b'})
+        self.assertEqual(err.exception.code, 400)
+        with mock.patch('takumi.provisioning.subprocess.Popen', return_value=FakeChild('pulling\n')) as launch:
+            code, info = self.req('/api/models/install', {'tag': 'qwen2.5-coder:7b'})
+        self.assertEqual(code, 202)
+        self.assertEqual(launch.call_args.args[0][-2:], ['pull', 'qwen2.5-coder:7b'])
+        self.assertFalse(launch.call_args.kwargs.get('shell', False))
 
 
 if __name__ == '__main__':

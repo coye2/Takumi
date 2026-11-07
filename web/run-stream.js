@@ -66,10 +66,11 @@
     const body={...options,request_id:options.request_id||crypto.randomUUID()};
     let failures=0;
     while(!cursor.terminal){
-      let reader, timer;
+      let reader, timer, resuming=false;
       const controller=new AbortController();
       const arm=()=>{clearTimeout(timer);timer=setTimeout(()=>controller.abort(),20000)};
-      const wake=()=>{if(!globalThis.document||document.visibilityState==='visible')controller.abort()};
+      // iOS can silently kill a socket in the background, so returning always resyncs. That is routine, not an outage.
+      const wake=()=>{if(!globalThis.document||document.visibilityState==='visible'){resuming=true;controller.abort()}};
       globalThis.addEventListener?.('online',wake);
       globalThis.document?.addEventListener('visibilitychange',wake);
       try{
@@ -94,8 +95,10 @@
         }
       }catch(error){
         if(error.permanent){error.outcomeUnknown=!!cursor.runId;throw error}
+        if(resuming)continue;
         failures=Math.min(failures+1,8);
-        onConnection('reconnecting',cursor.runId,error.message);
+        // One dropped request is retried at once. Only a second failure is worth telling anyone about.
+        if(failures>=2)onConnection('reconnecting',cursor.runId,error.message);
         await new Promise(resolve=>setTimeout(resolve,Math.min(10000,250*2**(failures-1))+Math.random()*150));
       }finally{clearTimeout(timer);controller.abort();globalThis.removeEventListener?.('online',wake);globalThis.document?.removeEventListener('visibilitychange',wake);if(reader){try{await reader.cancel()}catch{}}}
     }

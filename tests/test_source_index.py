@@ -22,6 +22,84 @@ class SourceIndexTests(unittest.TestCase):
             (root / 'fence.py').unlink()
             self.assertEqual(index.query(index.refresh(root), 'release')['total'], 0)
 
+    def test_a_constructor_call_targets_the_class_method(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / 'a.py').write_text('class Box:\n    def save(self, item):\n        return item\n', encoding='utf-8')
+            (root / 'b.py').write_text('from a import Box\nimport a\n\ndef pay():\n    return Box().save(1)\n\ndef other():\n    return a.Box().save(1)\n', encoding='utf-8')
+            (root / 'c.py').write_text('box = None\n\ndef use():\n    return box.save(1)\n', encoding='utf-8')
+            (root / 'd.py').write_text('from a import Box\n\ndef pay():\n    box = Box()\n    return box.save(1)\n', encoding='utf-8')
+            (root / 'e.py').write_text('from a import Box\n\ndef pay(box):\n    return box.save(1)\n', encoding='utf-8')
+            (root / 'f.py').write_text('from a import Box\nclass Other:\n    def save(self):\n        return 0\n\ndef pay():\n    box = Box()\n    box = Other()\n    return box.save()\n', encoding='utf-8')
+            (root / 'g.py').write_text('from a import Box\nbox = Box()\n\ndef pay():\n    return box.save(1)\n', encoding='utf-8')
+            (root / 'h.py').write_text(
+                'from a import Box\n\ndef shadowed(items):\n    box = Box()\n    return [box.save(1) for box in items]\n\n'
+                'def kept(items):\n    box = Box()\n    return [box.save(1) for item in items]\n', encoding='utf-8')
+            (root / 'pkg').mkdir()
+            (root / 'pkg' / 'a.py').write_text('class Box:\n    def save(self):\n        return 1\n', encoding='utf-8')
+            (root / 'pkg' / 'b.py').write_text('from .a import Box\n\ndef pay():\n    return Box().save()\n', encoding='utf-8')
+            data = SourceIndex(root / 'index.sqlite').refresh(root)
+            found = []
+            for unit in data['units'].values():
+                for call in unit['calls']:
+                    if call['name'] == 'save':
+                        found.append((call['path'], call['target']))
+            self.assertIn(('b.py', 'py:a.Box.save'), found)
+            self.assertEqual(found.count(('b.py', 'py:a.Box.save')), 2)
+            self.assertIn(('c.py', 'py:c.box.save'), found)
+            self.assertIn(('d.py', 'py:a.Box.save'), found)
+            self.assertIn(('e.py', 'py:e.box.save'), found)
+            self.assertIn(('f.py', 'py:f.box.save'), found)
+            self.assertIn(('g.py', 'py:a.Box.save'), found)
+            self.assertIn(('h.py', 'py:h.box.save'), found)
+            self.assertEqual(sum(path == 'h.py' and target == 'py:a.Box.save' for path, target in found), 1)
+            self.assertIn(('pkg/b.py', 'py:pkg.a.Box.save'), found)
+            self.assertNotIn('()', ''.join(target for _, target in found))
+
+    def test_an_unchanged_file_is_not_parsed_again(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / 'a.py').write_text('def stay():\n    return 1\n', encoding='utf-8')
+            (root / 'b.py').write_text('def move():\n    return 1\n', encoding='utf-8')
+            index = SourceIndex(root / 'index.sqlite')
+            first = index.refresh(root)
+            self.assertEqual((first['parsed'], first['reused']), (2, 0))
+            again = index.refresh(root)
+            self.assertEqual((again['parsed'], again['reused']), (0, 2))
+            (root / 'b.py').write_text('def move():\n    return 2\n', encoding='utf-8')
+            third = index.refresh(root)
+            self.assertEqual((third['parsed'], third['reused']), (1, 1))
+            self.assertEqual(third['units']['a.py']['symbols'][0]['name'], 'stay')
+            self.assertIn('return 2', Path(root / 'b.py').read_text(encoding='utf-8'))
+
+    def test_javascript_symbols_and_calls_are_indexed_without_clang(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d); root = base / 'web'; root.mkdir()
+            (root / 'view.mjs').write_text('export function paint() { return 1 }\n')
+            (root / 'app.mjs').write_text("import { paint } from './view.mjs'\nexport function ready() { return paint() }\n")
+            data = SourceIndex(base / 'index.sqlite').refresh(root)
+            self.assertTrue(data['units']['app.mjs']['complete'])
+            self.assertEqual(data['units']['app.mjs']['parser'], 'script-lexical')
+            index = SourceIndex(base / 'index.sqlite')
+            self.assertEqual(index.query(data, 'ready', 'symbols')['total'], 1)
+            paint = index.query(data, 'paint', 'calls')['matches']
+            self.assertEqual([(item['path'], item['target']) for item in paint], [('app.mjs', 'js:view.paint')])
+            self.assertIn('paint', data['units']['view.mjs']['exports'])
+            (root / 'a.mjs').write_text('export class Box {\n  save(item) {\n    return item\n  }\n}\n', encoding='utf-8')
+            (root / 'b.mjs').write_text(
+                "import { Box } from './a.mjs'\nexport function pay() {\n  const box = new Box()\n  return box.save(1)\n}\n"
+                "export function made() {\n  return new Box().save(1)\n}\n"
+                "export function loose(box) {\n  return box.save(1)\n}\n", encoding='utf-8')
+            (root / 'c.mjs').write_text("import { Box } from './a.mjs'\nconst box = null\nexport function use() {\n  return box.save(1)\n}\n", encoding='utf-8')
+            data = index.refresh(root)
+            save = [symbol for symbol in data['units']['a.mjs']['symbols'] if symbol['name'] == 'save'][0]
+            self.assertEqual((save['id'], save['line']), ('js:a.Box.save', 2))
+            calls = [(call['path'], call['target']) for unit in data['units'].values() for call in unit['calls'] if call['name'] == 'save']
+            self.assertIn(('b.mjs', 'js:a.Box.save'), calls)
+            self.assertEqual(calls.count(('b.mjs', 'js:a.Box.save')), 2)
+            self.assertNotIn(('b.mjs', 'js:b.box.save'), calls)
+            self.assertFalse(any(path == 'c.mjs' and target.endswith('Box.save') for path, target in calls))
+
     @unittest.skipUnless(find_tool('clang'), 'Actual Clang is required')
     def test_forty_file_exact_cpu_to_gpu_path_and_header_invalidation(self):
         # The oracle is the ordered public entry-point list, not an index dump.

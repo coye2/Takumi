@@ -29,7 +29,19 @@ import xml.etree.ElementTree as ET
 MAX_SEARCH_BYTES = 800_000
 SECRET = re.compile(r"(?i)(?:api[_-]?key|authorization|password|secret|token|bearer)\s*[:=]\s*[^\s]+")
 CODE = re.compile(r"```[\s\S]*?```|`[^`\n]{20,}`")
-TRIGGER = re.compile(r"\b(latest|current|today|202[5-9]|internet|search|research|look up|find online|source|references?|github|repo(?:sitory)?|compare|versus|vs\.?|who is|what is|what are|how does|what changed|antigravity|anti.gravity|release|documentation|upstream|implementations?|ricerca|cerca|cercare|online|aggiornato|ultima|ultimo|versione|implementazione|sorgenti|codice\s+sorgente|confronta|confronto|chi\s+è|cos.è|come\s+funziona|documentazione|repository)\b", re.I)
+TRIGGER = re.compile(r"\b(president|prime minister|chancellor|right now|rn|who won|weather|news|latest|current|today|202[5-9]|internet|search|research|look up|find online|source|references?|github|repo(?:sitory)?|compare|versus|vs\.?|who is|what is|what are|how does|what changed|antigravity|anti.gravity|release|documentation|upstream|implementations?|ricerca|cerca|cercare|online|aggiornato|ultima|ultimo|versione|implementazione|sorgenti|codice\s+sorgente|confronta|confronto|chi\s+è|cos.è|come\s+funziona|documentazione|repository)\b", re.I)
+# A local edit is not a request for a bibliography. Words such as "source" and
+# "implementation" appear in ordinary coding tasks and must not start a web search.
+_LOCAL_WORK = re.compile(
+    r"^\s*(?:(?:please|can you|i want you to|go ahead and)\s+)?"
+    r"(?:add|edit|update|fix|implement|patch|build|test|debug|refactor|compile|run|modify|write|create|repair|port|integrate|continue)\b",
+    re.I)
+_ASKS_OUTSIDE = re.compile(
+    r"\b(?:search|research|look up|find online|on the (?:web|internet)|compare|versus|vs\.?|"
+    r"who is|what is|what are|how does|what changed|release notes|"
+    r"ricerca|cerca(?:re)?|documentazione|confronta|confronto)\b",
+    re.I)
+_NO_SOURCE_NEEDED = re.compile(r"^\s*(?:(?:what(?:'s| is)\s+)?[\d\s+\-*/x().=^%]+\??|what(?:'s| is)? (?:the )?(?:time|date)(?: is it)?(?: today| now)?\??|what time is it(?: now)?\??|what day is it(?: today)?\??)\s*$", re.I)
 _REPO_TRIGGER = re.compile(r"\b(github|repository|repositories|upstream|implementation|source code|decomp|emulator|renderer|shader|reverse.engineer)\b", re.I)
 _FAILURE_LOCK = threading.RLock()
 _FAILURES: dict[str, tuple[int, float]] = {}
@@ -53,7 +65,14 @@ def should_research(prompt: str, mode: str = "auto") -> bool:
     if len(text) < 4:
         return False
     from .reddit_reader import request_scope
-    return mode == "always" or bool(TRIGGER.search(text)) or bool(request_scope(text))
+    if mode == "always" or request_scope(text):
+        return True
+    if _LOCAL_WORK.search(text) and not _ASKS_OUTSIDE.search(text):
+        return False
+    # Arithmetic needs no source, and the model is told the date and time.
+    if _NO_SOURCE_NEEDED.search(text):
+        return False
+    return bool(TRIGGER.search(text))
 
 
 def _public_url(url: str) -> str | None:

@@ -3,6 +3,7 @@
   const key = 'takumi-appearance';
   const meta = (name, value) => document.querySelector(`meta[name="${name}"]`)?.setAttribute('content', value);
   const paint = (color, scheme) => {
+    document.body.dataset.scheme = scheme;
     document.documentElement.style.backgroundColor = color;
     document.documentElement.style.colorScheme = scheme;
     document.body.style.colorScheme = scheme;
