@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Takumi Live Benchmark</title>
+<meta name="description" content="Takumi vs plain OpenCode on the same local model, scored by hidden unit tests, updating live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one column scoreboard; two-setup duel on top, per-task grid, then the run log. */
+:root {
+  --bg: #f7f3ea; --surface: #fffdf8; --fg: #1d2147; --muted: #5d6185; --line: #ddd7c8;
+  --indigo: #2b3a8c; --sakura: #c9577a; --plain: #6a7290;
+  --pass: #2e8a5c; --partial: #c48a1d; --fail: #b8433f; --pending: #e6e0d2;
+  --display: "Shippori Mincho", "Hiragino Mincho ProN", Georgia, serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12142b; --surface: #1a1d3a; --fg: #ece8de; --muted: #a3a6c4; --line: #2d3158;
+  --indigo: #8f9df0; --sakura: #ef8fae; --plain: #9aa1bd;
+  --pass: #4fc488; --partial: #e2b14a; --fail: #ec716b; --pending: #2a2e52; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12142b; --surface: #1a1d3a; --fg: #ece8de; --muted: #a3a6c4; --line: #2d3158;
+  --indigo: #8f9df0; --sakura: #ef8fae; --plain: #9aa1bd;
+  --pass: #4fc488; --partial: #e2b14a; --fail: #ec716b; --pending: #2a2e52; color-scheme: dark }
+* { box-sizing: border-box }
+main > * { min-width: 0 }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 1040px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 40px }
+header { display: grid; gap: 14px }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap }
+.live { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); color: var(--fg) }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--sakura) }
+.live.on i { animation: pulse 1.6s ease-in-out infinite }
+.live.done i { background: var(--pass) }
+@keyframes pulse { 50% { opacity: .25 } }
+@media (prefers-reduced-motion: reduce) { .live.on i { animation: none } }
+h1 { font: 800 clamp(34px, 6vw, 60px)/1.05 var(--display); margin: 0; text-wrap: balance; letter-spacing: -.01em }
+h1 em { font-style: normal; color: var(--sakura) }
+.lede { margin: 0; max-width: 62ch; color: var(--muted) }
+.progress { display: grid; gap: 8px; font: 13px var(--mono); color: var(--muted) }
+.bar { height: 6px; background: var(--pending); border-radius: 3px; overflow: hidden }
+.bar b { display: block; height: 100%; width: 0; background: var(--indigo); transition: width .6s }
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 16px }
+@media (max-width: 680px) { .duel { grid-template-columns: 1fr } }
+.side { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 16px; min-width: 0 }
+.side.takumi { border-top: 4px solid var(--sakura) }
+.side.plain { border-top: 4px solid var(--plain) }
+.side h2 { margin: 0; font: 600 22px/1.2 var(--display) }
+.side .who { font: 12px var(--mono); color: var(--muted); margin-top: 4px; overflow-wrap: anywhere }
+.big { font: 800 56px/1 var(--display); font-variant-numeric: tabular-nums }
+.big small { font: 500 15px var(--body); color: var(--muted); margin-left: 6px }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 }
+.stats div { display: grid; gap: 2px }
+.stats dt { font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.stats dd { margin: 0; font: 600 18px var(--mono); font-variant-numeric: tabular-nums }
+.note { margin: 0; padding: 12px 16px; border-left: 3px solid var(--partial); background: var(--surface); color: var(--muted); font-size: 14px; max-width: 72ch }
+section h3 { font: 600 20px var(--display); margin: 0 0 6px }
+section > p { margin: 0 0 16px; color: var(--muted); font-size: 14px; max-width: 70ch }
+.gridwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface) }
+table { border-collapse: collapse; width: 100%; font-size: 14px }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap }
+tr:last-child td { border-bottom: 0 }
+th { font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+td.task { font-family: var(--mono); font-size: 13px }
+.cells { display: flex; gap: 4px }
+.cell { width: 22px; height: 22px; border-radius: 5px; background: var(--pending); display: grid; place-items: center; font: 600 10px var(--mono); color: #fff }
+.cell.pass { background: var(--pass) } .cell.partial { background: var(--partial) } .cell.fail { background: var(--fail) }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 10px }
+.legend span { display: inline-flex; gap: 6px; align-items: center }
+.legend .cell { width: 14px; height: 14px }
+.log { font: 13px/1.5 var(--mono); display: grid; gap: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow-x: auto }
+.log div { display: grid; grid-template-columns: 72px 90px minmax(160px, 1fr) 64px 64px; gap: 12px; padding: 8px 14px; border-bottom: 1px solid var(--line); min-width: 520px }
+.log div:last-child { border-bottom: 0 }
+.tag-takumi { color: var(--sakura); font-weight: 600 } .tag-opencode { color: var(--plain); font-weight: 600 }
+.ok { color: var(--pass) } .bad { color: var(--fail) } .mid { color: var(--partial) }
+.method { display: grid; gap: 8px; font-size: 14px; color: var(--muted); max-width: 72ch; padding-left: 18px; margin: 0 }
+footer { font: 12px var(--mono); color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap }
+footer a, .method a { color: var(--indigo) }
+a:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px }
+#error[hidden] { display: none }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow"><span class="live" id="status"><i></i><span id="statusText">Loading</span></span><span id="updated"></span></div>
+    <h1><em>Takumi</em> vs plain OpenCode</h1>
+    <p class="lede">Same local model, same OpenCode agent, 20 coding tasks, each run 3 times per setup. Every run starts in an empty folder. Hidden unit tests are dropped in only after the agent finishes, so neither setup sees them.</p>
+    <div class="progress"><span id="progressText">–</span><div class="bar"><b id="progressBar"></b></div></div>
+  </header>
+
+  <p class="note" id="error" hidden></p>
+
+  <div class="duel">
+    <article class="side takumi"><div><h2>Takumi</h2><div class="who" id="whoT"></div></div>
+      <div class="big" id="solvedT">–<small>fully solved</small></div>
+      <dl class="stats"><div><dt>Tests passed</dt><dd id="testsT">–</dd></div><div><dt>Median time</dt><dd id="timeT">–</dd></div><div><dt>Timeouts</dt><dd id="toT">–</dd></div></dl>
+    </article>
+    <article class="side plain"><div><h2>Plain OpenCode</h2><div class="who" id="whoP"></div></div>
+      <div class="big" id="solvedP">–<small>fully solved</small></div>
+      <dl class="stats"><div><dt>Tests passed</dt><dd id="testsP">–</dd></div><div><dt>Median time</dt><dd id="timeP">–</dd></div><div><dt>Timeouts</dt><dd id="toP">–</dd></div></dl>
+    </article>
+  </div>
+  <p class="note" id="early">Early results swing a lot. Each setup needs all 60 of its runs before the comparison means anything.</p>
+
+  <section>
+    <h3>Every run, task by task</h3>
+    <p>Each square is one run. The number inside is how many hidden tests failed.</p>
+    <div class="gridwrap"><table><thead><tr><th>Task</th><th>Takumi</th><th>Plain OpenCode</th></tr></thead><tbody id="grid"></tbody></table></div>
+    <div class="legend"><span><i class="cell pass"></i>All tests pass</span><span><i class="cell partial"></i>Some pass</span><span><i class="cell fail"></i>None pass</span><span><i class="cell"></i>Not run yet</span></div>
+  </section>
+
+  <section>
+    <h3>Latest runs</h3>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section>
+    <h3>How it works</h3>
+    <ul class="method">
+      <li><b>Takumi</b> runs Sumi 1.1 (the Takumi profile on Bonsai 2 27B) with Takumi's task instructions and context settings.</li>
+      <li><b>Plain OpenCode</b> runs the same Bonsai 2 27B weights with OpenCode and Ollama defaults and the raw task text.</li>
+      <li>Both use the same OpenCode build and permissions, with web search off. Each run gets 10 minutes.</li>
+      <li>Takumi gets a single agent pass here. Its in-app review loop isn't used.</li>
+      <li>Runs alternate which setup goes first each round, so neither benefits from warm caches or time of day.</li>
+      <li>Raw data: <a href="results.json">results.json</a>. Tasks and tests: the <code>bench/</code> folder in the Takumi source.</li>
+    </ul>
+  </section>
+
+  <footer><span>Runs on one home PC.</span><span>Page refreshes every minute.</span></footer>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
+const median = xs => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const fmtTime = s => s == null ? '–' : s < 90 ? Math.round(s) + 's' : (s / 60).toFixed(1) + 'm';
+const ago = iso => { const d = (Date.now() - new Date(iso)) / 1000; return d < 90 ? 'just now' : d < 5400 ? Math.round(d / 60) + ' min ago' : Math.round(d / 3600) + ' h ago'; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function side(runs, k) {
+  const solved = runs.filter(r => r.passed === r.total).length;
+  const tp = runs.reduce((a, r) => a + r.passed, 0), tt = runs.reduce((a, r) => a + r.total, 0);
+  $('solved' + k).innerHTML = (runs.length ? pct(solved, runs.length) : '–') + `<small>fully solved · ${solved}/${runs.length} runs</small>`;
+  $('tests' + k).textContent = pct(tp, tt);
+  $('time' + k).textContent = fmtTime(median(runs.map(r => r.wall_s)));
+  $('to' + k).textContent = runs.length ? runs.filter(r => r.timed_out).length : '–';
+}
+
+function render(d) {
+  const runs = d.runs, T = runs.filter(r => r.condition === 'takumi'), P = runs.filter(r => r.condition === 'opencode');
+  const st = $('status');
+  st.className = 'live ' + (d.finished ? 'done' : 'on');
+  $('statusText').textContent = d.finished ? 'Finished' : 'Live';
+  $('updated').textContent = 'Updated ' + ago(d.published);
+  $('progressText').textContent = `${runs.length} of ${d.planned_runs} runs done`;
+  $('progressBar').style.width = (100 * runs.length / d.planned_runs) + '%';
+  $('whoT').textContent = d.models.takumi; $('whoP').textContent = d.models.opencode;
+  side(T, 'T'); side(P, 'P');
+  $('early').hidden = d.finished;
+  const by = {};
+  runs.forEach(r => ((by[r.task] ||= {})[r.condition] ||= {})[r.rep] = r);
+  $('grid').innerHTML = d.tasks.map(t => {
+    const cells = c => { let h = ''; for (let rep = 1; rep <= d.reps; rep++) { const r = by[t]?.[c]?.[rep];
+      if (!r) { h += '<span class="cell" title="Not run yet"></span>'; continue; }
+      const cls = r.passed === r.total ? 'pass' : r.passed ? 'partial' : 'fail';
+      const fails = r.total - r.passed;
+      h += `<span class="cell ${cls}" title="Round ${rep}: ${r.passed}/${r.total} tests, ${fmtTime(r.wall_s)}${r.timed_out ? ', timed out' : ''}">${fails || ''}</span>`; }
+      return `<div class="cells">${h}</div>`; };
+    return `<tr><td class="task">${esc(t)}</td><td>${cells('takumi')}</td><td>${cells('opencode')}</td></tr>`;
+  }).join('');
+  const recent = runs.slice(-10).reverse();
+  $('log').innerHTML = recent.length ? recent.map(r => {
+    const cls = r.passed === r.total ? 'ok' : r.passed ? 'mid' : 'bad';
+    const name = r.condition === 'takumi' ? 'Takumi' : 'OpenCode';
+    return `<div><span>${new Date(r.finished).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span><span class="tag-${r.condition}">${name}</span><span>${esc(r.task)} · round ${r.rep}</span><span class="${cls}">${r.passed}/${r.total}</span><span>${fmtTime(r.wall_s)}${r.timed_out ? ' ⏱' : ''}</span></div>`;
+  }).join('') : '<div><span>No runs finished yet.</span></div>';
+}
+
+async function load() {
+  try {
+    const res = await fetch('results.json?t=' + Date.now(), {cache: 'no-store'});
+    if (!res.ok) throw new Error(res.status);
+    render(await res.json());
+    $('error').hidden = true;
+    if (!window._doneLoaded) {}
+  } catch (e) {
+    $('error').textContent = "Couldn't load the latest results. Trying again in a minute.";
+    $('error').hidden = false;
+  }
+}
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>

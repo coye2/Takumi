@@ -1,0 +1,73 @@
+{
+ "models": {
+  "takumi": "sumi-1.0:latest",
+  "opencode": "bonsai-2:27b"
+ },
+ "opencode_version": "1.19.5",
+ "reps": 3,
+ "timeout_s": 600,
+ "started": "2026-11-08T23:25:44+00:00",
+ "planned_runs": 120,
+ "tasks": [
+  "01-slugify",
+  "02-lru-cache",
+  "03-roman",
+  "04-inventory-package",
+  "05-fix-stats-bugs",
+  "06-expression-calculator",
+  "07-markdown-table",
+  "08-calendar-intervals",
+  "09-todo-service",
+  "10-csv-report",
+  "11-token-bucket",
+  "12-shortest-path",
+  "13-refactor-shapes",
+  "14-bank-accounts",
+  "15-url-builder",
+  "16-matrix",
+  "17-word-frequency",
+  "18-binary-search-tree",
+  "19-business-days",
+  "20-tictactoe-ai"
+ ],
+ "published": "2026-11-08T23:38:58+00:00",
+ "finished": false,
+ "runs": [
+  {
+   "rep": 1,
+   "condition": "takumi",
+   "task": "01-slugify",
+   "model": "sumi-1.0:latest",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 305.2,
+   "timed_out": false,
+   "finished": "2026-11-08T23:30:49+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 1,
+   "condition": "takumi",
+   "task": "02-lru-cache",
+   "model": "sumi-1.0:latest",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 106.2,
+   "timed_out": false,
+   "finished": "2026-11-08T23:32:35+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 1,
+   "condition": "takumi",
+   "task": "03-roman",
+   "model": "sumi-1.0:latest",
+   "passed": 4,
+   "total": 4,
+   "wall_s": 277.9,
+   "timed_out": false,
+   "finished": "2026-11-08T23:37:13+00:00",
+   "agent_error": false
+  }
+ ]
+}
