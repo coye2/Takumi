@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T06:53:14+00:00",
+ "published": "2026-11-09T06:57:15+00:00",
  "finished": false,
  "runs": [
   {
@@ -1027,6 +1027,30 @@
    "wall_s": 594.8,
    "timed_out": false,
    "finished": "2026-11-09T06:53:12+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 3,
+   "condition": "takumi",
+   "task": "04-inventory-package",
+   "model": "sumi-1.0:latest",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 135.6,
+   "timed_out": false,
+   "finished": "2026-11-09T06:55:28+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 3,
+   "condition": "takumi",
+   "task": "05-fix-stats-bugs",
+   "model": "sumi-1.0:latest",
+   "passed": 5,
+   "total": 5,
+   "wall_s": 78.9,
+   "timed_out": false,
+   "finished": "2026-11-09T06:56:47+00:00",
    "agent_error": false
   }
  ]
