@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T02:13:50+00:00",
+ "published": "2026-11-09T02:17:51+00:00",
  "finished": false,
  "runs": [
   {
@@ -415,6 +415,18 @@
    "wall_s": 115.1,
    "timed_out": false,
    "finished": "2026-11-09T02:12:16+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 1,
+   "condition": "opencode",
+   "task": "13-refactor-shapes",
+   "model": "bonsai-2:27b",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 281.1,
+   "timed_out": false,
+   "finished": "2026-11-09T02:16:57+00:00",
    "agent_error": false
   }
  ]
