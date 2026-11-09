@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T05:38:56+00:00",
+ "published": "2026-11-09T05:44:57+00:00",
  "finished": false,
  "runs": [
   {
@@ -895,6 +895,18 @@
    "wall_s": 146.5,
    "timed_out": false,
    "finished": "2026-11-09T05:37:54+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "takumi",
+   "task": "13-refactor-shapes",
+   "model": "sumi-1.0:latest",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 408.2,
+   "timed_out": false,
+   "finished": "2026-11-09T05:44:43+00:00",
    "agent_error": false
   }
  ]
