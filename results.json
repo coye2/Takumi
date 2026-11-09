@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T04:52:37+00:00",
+ "published": "2026-11-09T04:56:39+00:00",
  "finished": false,
  "runs": [
   {
@@ -751,6 +751,30 @@
    "wall_s": 600.3,
    "timed_out": true,
    "finished": "2026-11-09T04:52:05+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "takumi",
+   "task": "01-slugify",
+   "model": "sumi-1.0:latest",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 196.7,
+   "timed_out": false,
+   "finished": "2026-11-09T04:55:21+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "takumi",
+   "task": "02-lru-cache",
+   "model": "sumi-1.0:latest",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 68.1,
+   "timed_out": false,
+   "finished": "2026-11-09T04:56:30+00:00",
    "agent_error": false
   }
  ]
