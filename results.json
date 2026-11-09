@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T05:44:57+00:00",
+ "published": "2026-11-09T05:48:59+00:00",
  "finished": false,
  "runs": [
   {
@@ -907,6 +907,18 @@
    "wall_s": 408.2,
    "timed_out": false,
    "finished": "2026-11-09T05:44:43+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "takumi",
+   "task": "14-bank-accounts",
+   "model": "sumi-1.0:latest",
+   "passed": 5,
+   "total": 5,
+   "wall_s": 143.9,
+   "timed_out": false,
+   "finished": "2026-11-09T05:47:07+00:00",
    "agent_error": false
   }
  ]
