@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T03:22:08+00:00",
+ "published": "2026-11-09T03:24:10+00:00",
  "finished": false,
  "runs": [
   {
@@ -547,6 +547,18 @@
    "wall_s": 600.3,
    "timed_out": true,
    "finished": "2026-11-09T03:20:38+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "opencode",
+   "task": "04-inventory-package",
+   "model": "bonsai-2:27b",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 126.5,
+   "timed_out": false,
+   "finished": "2026-11-09T03:22:44+00:00",
    "agent_error": false
   }
  ]
