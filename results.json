@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T03:48:18+00:00",
+ "published": "2026-11-09T03:50:19+00:00",
  "finished": false,
  "runs": [
   {
@@ -619,6 +619,18 @@
    "wall_s": 207.2,
    "timed_out": false,
    "finished": "2026-11-09T03:47:30+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "opencode",
+   "task": "10-csv-report",
+   "model": "bonsai-2:27b",
+   "passed": 4,
+   "total": 4,
+   "wall_s": 136.2,
+   "timed_out": false,
+   "finished": "2026-11-09T03:49:47+00:00",
    "agent_error": false
   }
  ]
