@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T04:04:26+00:00",
+ "published": "2026-11-09T04:08:27+00:00",
  "finished": false,
  "runs": [
   {
@@ -667,6 +667,18 @@
    "wall_s": 322.3,
    "timed_out": false,
    "finished": "2026-11-09T04:03:47+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "opencode",
+   "task": "14-bank-accounts",
+   "model": "bonsai-2:27b",
+   "passed": 5,
+   "total": 5,
+   "wall_s": 277.4,
+   "timed_out": false,
+   "finished": "2026-11-09T04:08:25+00:00",
    "agent_error": false
   }
  ]
