@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T03:26:11+00:00",
+ "published": "2026-11-09T03:34:13+00:00",
  "finished": false,
  "runs": [
   {
@@ -571,6 +571,18 @@
    "wall_s": 135.9,
    "timed_out": false,
    "finished": "2026-11-09T03:25:00+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 2,
+   "condition": "opencode",
+   "task": "06-expression-calculator",
+   "model": "bonsai-2:27b",
+   "passed": 6,
+   "total": 6,
+   "wall_s": 538.4,
+   "timed_out": false,
+   "finished": "2026-11-09T03:33:59+00:00",
    "agent_error": false
   }
  ]
