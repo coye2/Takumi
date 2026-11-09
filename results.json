@@ -30,7 +30,7 @@
   "19-business-days",
   "20-tictactoe-ai"
  ],
- "published": "2026-11-09T02:03:46+00:00",
+ "published": "2026-11-09T02:11:48+00:00",
  "finished": false,
  "runs": [
   {
@@ -391,6 +391,18 @@
    "wall_s": 193.9,
    "timed_out": false,
    "finished": "2026-11-09T02:03:32+00:00",
+   "agent_error": false
+  },
+  {
+   "rep": 1,
+   "condition": "opencode",
+   "task": "11-token-bucket",
+   "model": "bonsai-2:27b",
+   "passed": 5,
+   "total": 5,
+   "wall_s": 408.2,
+   "timed_out": false,
+   "finished": "2026-11-09T02:10:21+00:00",
    "agent_error": false
   }
  ]
